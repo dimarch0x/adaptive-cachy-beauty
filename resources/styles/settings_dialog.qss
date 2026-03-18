@@ -1,0 +1,122 @@
+QDialog {
+    background-color: transparent;
+    font-family: 'Inter', 'Roboto', sans-serif;
+}
+QLabel {
+    font-size: 14px;
+    color: $text_secondary;
+    font-weight: 500;
+}
+QLabel#Title {
+    font-size: 24px;
+    font-weight: 800;
+    color: $text_primary;
+    min-height: 36px;
+    padding-bottom: 5px;
+}
+QLabel#Subtitle {
+    font-size: 13px;
+    color: $text_muted;
+    margin-bottom: 20px;
+}
+QFrame#Card {
+    background-color: $card_bg;
+    border: 1px solid $card_border;
+    border-radius: 16px;
+}
+QCheckBox {
+    font-size: 14px;
+    color: $text_primary;
+    spacing: 28px;
+    padding: 10px 0px;
+}
+QCheckBox::indicator {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    border: 1px solid $indicator_border;
+    background-color: $indicator_bg;
+}
+QCheckBox::indicator:hover {
+    background-color: $indicator_hover;
+}
+QCheckBox::indicator:checked {
+    background-color: $accent_color;
+    border: 1px solid $accent_color;
+    image: none;
+}
+QComboBox {
+    background-color: $combo_bg;
+    border: 1px solid $combo_border;
+    border-radius: 10px;
+    padding: 6px 15px;
+    color: $text_primary;
+    font-size: 13px;
+    font-weight: 600;
+}
+QComboBox:hover {
+    background-color: $combo_hover_bg;
+}
+QComboBox:focus {
+    border: 1px solid $accent_color;
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 32px;
+    border: none;
+    background: transparent;
+}
+QComboBox::down-arrow {
+    image: url($chevron_path);
+    width: 14px;
+    height: 14px;
+}
+QComboBox::down-arrow:on {
+    top: 1px;
+    left: 1px;
+}
+QComboBox QAbstractItemView {
+    background-color: $menu_bg;
+    border: 1px solid $card_border;
+    border-radius: 8px;
+    color: $text_primary;
+    selection-background-color: $accent_color;
+    selection-color: $text_button;
+    outline: none;
+    padding: 4px;
+}
+QComboBox QAbstractItemView::item {
+    min-height: 32px;
+    border-radius: 6px;
+    padding-left: 8px;
+}
+QComboBox QAbstractItemView::item:hover {
+    background-color: $menu_item_hover;
+}
+QPushButton {
+    background-color: $accent_color;
+    color: $text_button;
+    border-radius: 18px;
+    padding: 6px 24px;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    min-height: 36px;
+    min-width: 120px;
+}
+QPushButton:hover {
+    background-color: $accent_hover;
+}
+QPushButton:pressed {
+    background-color: $accent_pressed;
+}
+QPushButton#CancelBtn {
+    background-color: $cancel_bg;
+    border: none;
+    color: $text_secondary;
+}
+QPushButton#CancelBtn:hover {
+    background-color: $cancel_hover;
+    color: $text_primary;
+}

@@ -44,12 +44,10 @@ CachyOS is built for blistering speed and performance, but its stock Plasma them
 
 ## 📸 Screenshots
 
-*(Replace these placeholder links with your actual setup screenshots once deployed)*
-
-| Dark Neon Glass | Soft Muted Mode |
+| Dark Neon Glass | Material Pure |
 | :---: | :---: |
-| ![Dark Neon Glass Placeholder](https://via.placeholder.com/600x400/1e1e2e/89dceb?text=Dark+Neon+Glass+Theme) | ![Soft Muted Placeholder](https://via.placeholder.com/600x400/313244/f5e0dc?text=Soft+Muted+Theme) |
-| *Vibrant terminal transparency with dynamic active borders.* | *Calm pastel tones ensuring high readability for deep focus.* |
+| ![Dark Neon Glass Theme](resources/screenshots/placeholder_neonglss.png) | ![Material Pure Theme](resources/screenshots/placeholder_matpure.png) |
+| *Vibrant terminal transparency with dynamic active borders.* | *Clean, flat solid colors ensuring high readability for deep focus.* |
 
 ---
 

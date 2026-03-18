@@ -1,4 +1,6 @@
 import os
+import configparser
+from string import Template
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -9,6 +11,9 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
     QWidget,
+    QGraphicsDropShadowEffect,
+    QGridLayout,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont, QIcon, QPainter, QColor
@@ -31,7 +36,7 @@ class SettingsDialog(QDialog):
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
             
-        self.setFixedSize(550, 480)
+        self.setFixedSize(600, 600)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         # Always keep translucent — we control opacity via paintEvent
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -58,6 +63,9 @@ class SettingsDialog(QDialog):
         self.update_stylesheet()
 
     def update_stylesheet(self):
+        chevron_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "chevron-down.svg"))
+        chevron_path = chevron_path.replace("\\", "/")
+
         try:
             current_style = self.profile_combo.currentText()
         except AttributeError:
@@ -87,114 +95,77 @@ class SettingsDialog(QDialog):
         # Force repaint with new bg color
         self.update()
 
-        self.setStyleSheet(f"""
-            QDialog {{
-                background-color: transparent;
-                font-family: 'Inter', 'Roboto', sans-serif;
-            }}
-            QLabel {{
-                font-size: 14px;
-                color: #a9b1d6;
-                font-weight: 500;
-            }}
-            QLabel#Title {{
-                font-size: 24px;
-                font-weight: 800;
-                color: #7aa2f7;
-                min-height: 36px;
-                padding-bottom: 5px;
-            }}
-            QLabel#Subtitle {{
-                font-size: 13px;
-                color: #565f89;
-                margin-bottom: 20px;
-            }}
-            QCheckBox {{
-                font-size: 14px;
-                color: #c0caf5;
-                spacing: 12px;
-                padding: 5px 0px;
-            }}
-            QCheckBox::indicator {{
-                width: 22px;
-                height: 22px;
-                border-radius: 6px;
-                border: 2px solid #414868;
-                background-color: #1a1b26;
-            }}
-            QCheckBox::indicator:hover {{
-                border: 2px solid #7aa2f7;
-            }}
-            QCheckBox::indicator:checked {{
-                background-color: #7aa2f7;
-                border: 2px solid #7aa2f7;
-            }}
-            QComboBox {{
-                background-color: #1a1b26;
-                border: 2px solid #24283b;
-                border-radius: 8px;
-                padding: 6px 15px;
-                color: #c0caf5;
-                font-size: 13px;
-                font-weight: 600;
-                min-width: 150px;
-                min-height: 34px;
-            }}
-            QComboBox:hover {{
-                border: 2px solid #414868;
-            }}
-            QComboBox:focus {{
-                border: 2px solid #7aa2f7;
-            }}
-            QComboBox::drop-down {{
-                border: none;
-                width: 30px;
-            }}
-            QFrame#Separator {{
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(122, 162, 247, 0), stop:0.5 rgba(122, 162, 247, 150), stop:1 rgba(122, 162, 247, 0));
-                max-height: 1px;
-                margin: 20px 0px;
-            }}
-            QPushButton {{
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7aa2f7, stop:1 #bb9af7);
-                color: #15161e;
-                border-radius: 8px;
-                padding: 6px 20px;
-                font-weight: 800;
-                font-size: 14px;
-                border: none;
-                min-height: 38px;
-                min-width: 120px;
-            }}
-            QPushButton:hover {{
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8db0fc, stop:1 #cbb1fc);
-            }}
-            QPushButton:pressed {{
-                background-color: #7aa2f7;
-            }}
-            QPushButton#CancelBtn {{
-                background-color: #1a1b26;
-                border: 2px solid #24283b;
-                color: #a9b1d6;
-                min-height: 34px;
-            }}
-            QPushButton#CancelBtn:hover {{
-                border: 2px solid #414868;
-                color: #c0caf5;
-            }}
-        """)
+        # Define default dynamic colors mapped from the QSS layout
+        colors = {
+            "text_primary": "#ffffff",
+            "text_secondary": "#a9b1d6",
+            "text_muted": "#565f89",
+            "text_button": "#ffffff",
+            "card_bg": "rgba(255, 255, 255, 0.04)",
+            "card_border": "rgba(255, 255, 255, 0.08)",
+            "indicator_bg": "rgba(0, 0, 0, 0.3)",
+            "indicator_border": "rgba(255, 255, 255, 0.1)",
+            "indicator_hover": "rgba(0, 0, 0, 0.4)",
+            "accent_color": "#2f64ff",
+            "accent_hover": "#4371ff",
+            "accent_pressed": "#1c48cc",
+            "combo_bg": "rgba(0, 0, 0, 0.2)",
+            "combo_border": "rgba(255, 255, 255, 0.1)",
+            "combo_hover_bg": "rgba(0, 0, 0, 0.3)",
+            "menu_bg": "rgba(20, 22, 33, 0.95)",
+            "menu_border": "rgba(255, 255, 255, 0.1)",
+            "menu_item_hover": "rgba(47, 100, 255, 0.2)",
+            "cancel_bg": "rgba(255, 255, 255, 0.08)",
+            "cancel_hover": "rgba(255, 255, 255, 0.12)",
+            "chevron_path": chevron_path,
+        }
+
+        # Try mapping KDE colors from the AdaptiveCachy palette file generated by the engine
+        colors_conf = os.path.expanduser("~/.local/share/color-schemes/AdaptiveCachy.colors")
+        if os.path.exists(colors_conf):
+            parser = configparser.ConfigParser()
+            parser.read(colors_conf)
+            if "Colors:Selection" in parser and "BackgroundNormal" in parser["Colors:Selection"]:
+                rgb = parser["Colors:Selection"]["BackgroundNormal"].split(",")
+                if len(rgb) == 3:
+                     # Dynamically bind system accent to settings menu buttons and focus rings
+                     hex_accent = f"#{int(rgb[0]):02x}{int(rgb[1]):02x}{int(rgb[2]):02x}"
+                     colors["accent_color"] = hex_accent
+                     # Map hovering overlay for items
+                     colors["menu_item_hover"] = f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, 0.2)"
+            if "Colors:Window" in parser and "ForegroundNormal" in parser["Colors:Window"]:
+                rgb_text = parser["Colors:Window"]["ForegroundNormal"].split(",")
+                if len(rgb_text) == 3:
+                     hex_text = f"#{int(rgb_text[0]):02x}{int(rgb_text[1]):02x}{int(rgb_text[2]):02x}"
+                     colors["text_primary"] = hex_text
+
+        # Load extracted QSS templates
+        qss_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "styles", "settings_dialog.qss"))
+        if os.path.exists(qss_path):
+            with open(qss_path, "r", encoding="utf-8") as f:
+                stylesheet = f.read()
+            self.setStyleSheet(Template(stylesheet).safe_substitute(colors))
+        else:
+            logger.warning(f"Extracted QSS not found at {qss_path}. Reverting to no style.")
 
     def _on_profile_changed(self, text):
         self.update_stylesheet()
 
     def setup_ui(self):
-        # Modern Premium Styling - Glassmorphism & Neon accents
-        # Stylesheet is now managed dynamically by update_stylesheet
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(18)
+        self._main_layout = QVBoxLayout(self)
+        self._main_layout.setContentsMargins(40, 40, 40, 40)
+        self._main_layout.setSpacing(20)
 
-        # Header Section
+        self._build_header()
+        self._build_main_card()
+        self._build_toggles_card()
+
+        self._main_layout.addStretch()
+
+        self._build_actions()
+        self._apply_popup_transparency()
+
+    def _build_header(self):
         header_layout = QVBoxLayout()
         header_layout.setSpacing(0)
         
@@ -206,29 +177,41 @@ class SettingsDialog(QDialog):
         subtitle.setObjectName("Subtitle")
         header_layout.addWidget(subtitle)
         
-        layout.addLayout(header_layout)
+        self._main_layout.addLayout(header_layout)
+
+    def _build_main_card(self):
+        main_card = QFrame()
+        main_card.setObjectName("Card")
+        grid = QGridLayout(main_card)
+        grid.setVerticalSpacing(24)
+        grid.setHorizontalSpacing(32)
+        grid.setContentsMargins(28, 28, 28, 28)
+
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)
+        shadow.setColor(QColor(0, 0, 0, 50))
+        shadow.setOffset(0, 5)
+        main_card.setGraphicsEffect(shadow)
+
         # Mode Selection
-        mode_layout = QHBoxLayout()
         mode_label = QLabel("Theme Mode:")
         self.mode_combo = QComboBox()
         self.mode_combo.addItems(["Dark", "Light"])
-        mode_layout.addWidget(mode_label)
-        mode_layout.addStretch()
-        mode_layout.addWidget(self.mode_combo)
-        layout.addLayout(mode_layout)
+        self.mode_combo.setFixedHeight(38)
+        self.mode_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        grid.addWidget(mode_label, 0, 0)
+        grid.addWidget(self.mode_combo, 0, 1)
 
         # Contrast Level
-        contrast_layout = QHBoxLayout()
         contrast_label = QLabel("Contrast Level:")
         self.contrast_combo = QComboBox()
         self.contrast_combo.addItems(["Standard", "High", "Medium"])
-        contrast_layout.addWidget(contrast_label)
-        contrast_layout.addStretch()
-        contrast_layout.addWidget(self.contrast_combo)
-        layout.addLayout(contrast_layout)
+        self.contrast_combo.setFixedHeight(38)
+        self.contrast_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        grid.addWidget(contrast_label, 1, 0)
+        grid.addWidget(self.contrast_combo, 1, 1)
 
-        # Theme Style (Replaces Color Profile)
-        profile_layout = QHBoxLayout()
+        # Theme Style
         profile_label = QLabel("Theme Style:")
         self.profile_combo = QComboBox()
         self.profile_combo.addItems(
@@ -238,45 +221,63 @@ class SettingsDialog(QDialog):
                 "Material Pure",
             ]
         )
-        profile_layout.addWidget(profile_label)
-        profile_layout.addStretch()
-        profile_layout.addWidget(self.profile_combo)
-        layout.addLayout(profile_layout)
+        self.profile_combo.setFixedHeight(38)
+        self.profile_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
+        grid.addWidget(profile_label, 2, 0)
+        grid.addWidget(self.profile_combo, 2, 1)
 
-        # Separator
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setObjectName("Separator")
-        layout.addWidget(line)
+        grid.setRowStretch(3, 1)
+        self._main_layout.addWidget(main_card)
 
-        # Toggles
+    def _build_toggles_card(self):
+        toggles_card = QFrame()
+        toggles_card.setObjectName("Card")
+        toggles_layout = QVBoxLayout(toggles_card)
+        toggles_layout.setSpacing(20)
+        toggles_layout.setContentsMargins(24, 24, 24, 24)
+
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)
+        shadow.setColor(QColor(0, 0, 0, 50))
+        shadow.setOffset(0, 5)
+        toggles_card.setGraphicsEffect(shadow)
+
         self.kvantum_check = QCheckBox("Enable Kvantum Window Theming")
-        layout.addWidget(self.kvantum_check)
+        self.kvantum_check.setMinimumHeight(38)
+        toggles_layout.addWidget(self.kvantum_check)
 
         self.konsole_check = QCheckBox("Enable Konsole Profile Generation")
-        layout.addWidget(self.konsole_check)
+        self.konsole_check.setMinimumHeight(38)
+        toggles_layout.addWidget(self.konsole_check)
 
-        layout.addStretch()
+        self._main_layout.addWidget(toggles_card)
 
-        # Buttons
+    def _build_actions(self):
         btn_layout = QHBoxLayout()
 
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.setObjectName("CancelBtn")
         self.cancel_btn.clicked.connect(self.reject)
 
-        self.save_btn = QPushButton("Save & Apply")
+        self.save_btn = QPushButton("Save && Apply")
         self.save_btn.clicked.connect(self.save_settings)
 
         btn_layout.addStretch()
         btn_layout.addWidget(self.cancel_btn)
         btn_layout.addWidget(self.save_btn)
 
-        layout.addLayout(btn_layout)
-        
-        # Connect combo box to stylesheet updater for real-time blur feedback
-        self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
-        
+        self._main_layout.addLayout(btn_layout)
+
+    def _apply_popup_transparency(self):
+        for combo in (self.mode_combo, self.contrast_combo, self.profile_combo):
+            container = combo.view().parentWidget()
+            if container:
+                container.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
+                container.setAttribute(Qt.WA_TranslucentBackground)
+                container.setObjectName("ComboContainer")
+                container.setStyleSheet("#ComboContainer { background: transparent; border: none; }")
+
         # Initial stylesheet application
         self.update_stylesheet()
 
