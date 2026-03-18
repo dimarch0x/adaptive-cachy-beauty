@@ -39,14 +39,8 @@ class SettingsDialog(QDialog):
         self.load_current_settings()
 
     def update_stylesheet(self):
-        try:
-            current_style = self.profile_combo.currentText()
-        except AttributeError:
-            current_style = "Neon Glass"
-            
-        is_glass = "Glass" in current_style
-        # In Glass mode, opacity is ~0.65; otherwise fully opaque
-        bg_color = "rgba(15, 17, 26, 0.65)" if is_glass else "#0f111a"
+        # Always use a premium glassmorphic background for the settings dialog itself
+        bg_color = "rgba(15, 17, 26, 0.65)"
 
         # Dynamically apply KWin Blur using xprop (Works because of QT_QPA_PLATFORM=xcb)
         import platform
@@ -54,10 +48,7 @@ class SettingsDialog(QDialog):
         if platform.system() == 'Linux':
             wid = str(int(self.winId()))
             try:
-                if is_glass:
-                    subprocess.run(['xprop', '-f', '_KDE_NET_WM_BLUR_BEHIND_REGION', '32c', '-set', '_KDE_NET_WM_BLUR_BEHIND_REGION', '0', '-id', wid], capture_output=True)
-                else:
-                    subprocess.run(['xprop', '-remove', '_KDE_NET_WM_BLUR_BEHIND_REGION', '-id', wid], capture_output=True)
+                subprocess.run(['xprop', '-f', '_KDE_NET_WM_BLUR_BEHIND_REGION', '32c', '-set', '_KDE_NET_WM_BLUR_BEHIND_REGION', '0', '-id', wid], capture_output=True)
             except Exception as e:
                 logger.warning(f"Could not set window blur property: {e}")
 
