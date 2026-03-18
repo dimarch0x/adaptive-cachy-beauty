@@ -52,6 +52,11 @@ class SettingsDialog(QDialog):
         painter.end()
         super().paintEvent(event)
 
+    def showEvent(self, event):
+        """Re-apply blur properties every time the dialog becomes visible."""
+        super().showEvent(event)
+        self.update_stylesheet()
+
     def update_stylesheet(self):
         try:
             current_style = self.profile_combo.currentText()
