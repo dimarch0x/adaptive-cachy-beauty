@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QFont, QIcon, QPainter, QColor
 
 from config_manager import ConfigManager
 from logger import logger
@@ -33,9 +33,24 @@ class SettingsDialog(QDialog):
             
         self.setFixedSize(550, 480)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        # Always keep translucent — we control opacity via paintEvent
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+
+        # Default background color (will be updated dynamically)
+        self._bg_color = QColor(15, 17, 26, 255)
 
         self.setup_ui()
         self.load_current_settings()
+
+    def paintEvent(self, event):
+        """Manually paint the dialog background to control transparency."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBrush(self._bg_color)
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(self.rect(), 12, 12)
+        painter.end()
+        super().paintEvent(event)
 
     def update_stylesheet(self):
         try:
@@ -45,11 +60,13 @@ class SettingsDialog(QDialog):
 
         is_glass = "Glass" in current_style
 
-        # Toggle translucent background dynamically
-        self.setAttribute(Qt.WA_TranslucentBackground, is_glass)
-        bg_color = "rgba(15, 17, 26, 0.65)" if is_glass else "#0f111a"
+        # Set bg color: semi-transparent for Glass, fully opaque for others
+        if is_glass:
+            self._bg_color = QColor(15, 17, 26, 166)  # ~65% opacity
+        else:
+            self._bg_color = QColor(15, 17, 26, 255)  # 100% opaque
 
-        # Dynamically apply/remove KWin Blur using xprop (Works because of QT_QPA_PLATFORM=xcb)
+        # Dynamically apply/remove KWin Blur using xprop
         import platform
         import subprocess
         if platform.system() == 'Linux':
@@ -62,9 +79,12 @@ class SettingsDialog(QDialog):
             except Exception as e:
                 logger.warning(f"Could not set window blur property: {e}")
 
+        # Force repaint with new bg color
+        self.update()
+
         self.setStyleSheet(f"""
             QDialog {{
-                background-color: {bg_color};
+                background-color: transparent;
                 font-family: 'Inter', 'Roboto', sans-serif;
             }}
             QLabel {{
