@@ -24,7 +24,7 @@ CachyOS is built for blistering speed and performance, but its stock Plasma them
 ## ✨ Key Features
 
 - 🎨 **Dynamic Styling Archetypes**
-  Choose the mood that fits you best. Built-in styles include `Neon Glass`, `Frosted Glass`, `Material Pure`, `Vivid High-Contrast`, and `Soft Muted`.
+  Choose the mood that fits you best. Built-in styles include `Neon Glass`, `Frosted Glass`, and `Material Pure`.
 - 🧠 **Smart Contrast Engine (HCT Delta)**
   Strict WCAG-compliant contrast checking. The engine intelligently shifts color tones to guarantee that text, window borders, and active panels remain perfectly readable, regardless of the wallpaper's complexity. You are in control of the level (`Standard`, `High`, `Medium`).
 - 🪟 **True Glassmorphism**

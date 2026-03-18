@@ -236,8 +236,6 @@ class SettingsDialog(QDialog):
                 "Neon Glass",
                 "Frosted Glass",
                 "Material Pure",
-                "Vivid High-Contrast",
-                "Soft Muted",
             ]
         )
         profile_layout.addWidget(profile_label)
@@ -297,8 +295,6 @@ class SettingsDialog(QDialog):
             "Neon Glass",
             "Frosted Glass",
             "Material Pure",
-            "Vivid High-Contrast",
-            "Soft Muted",
         ]
         profile = self.config.get("theme_style", "Neon Glass")
         # Ensure exact casing match if previously saved differently
