@@ -1,5 +1,9 @@
 import sys
 import os
+
+# Force X11/XWayland to enable KWin Blur via xprop
+os.environ["QT_QPA_PLATFORM"] = "xcb"
+
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtCore import QCoreApplication, QTimer, QObject, Slot, SLOT

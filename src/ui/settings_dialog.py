@@ -45,7 +45,21 @@ class SettingsDialog(QDialog):
             current_style = "Neon Glass"
             
         is_glass = "Glass" in current_style
+        # In Glass mode, opacity is ~0.65; otherwise fully opaque
         bg_color = "rgba(15, 17, 26, 0.65)" if is_glass else "#0f111a"
+
+        # Dynamically apply KWin Blur using xprop (Works because of QT_QPA_PLATFORM=xcb)
+        import platform
+        import subprocess
+        if platform.system() == 'Linux':
+            wid = str(int(self.winId()))
+            try:
+                if is_glass:
+                    subprocess.run(['xprop', '-f', '_KDE_NET_WM_BLUR_BEHIND_REGION', '32c', '-set', '_KDE_NET_WM_BLUR_BEHIND_REGION', '0', '-id', wid], capture_output=True)
+                else:
+                    subprocess.run(['xprop', '-remove', '_KDE_NET_WM_BLUR_BEHIND_REGION', '-id', wid], capture_output=True)
+            except Exception as e:
+                logger.warning(f"Could not set window blur property: {e}")
 
         self.setStyleSheet(f"""
             QDialog {{
