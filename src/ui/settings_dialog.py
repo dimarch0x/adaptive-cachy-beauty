@@ -33,55 +33,63 @@ class SettingsDialog(QDialog):
             
         self.setFixedSize(550, 480)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
 
         self.setup_ui()
         self.load_current_settings()
 
-    def setup_ui(self):
-        # Modern Premium Styling - Glassmorphism & Neon accents
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #0f111a;
+    def update_stylesheet(self):
+        try:
+            current_style = self.profile_combo.currentText()
+        except AttributeError:
+            current_style = "Neon Glass"
+            
+        is_glass = "Glass" in current_style
+        bg_color = "rgba(15, 17, 26, 0.65)" if is_glass else "#0f111a"
+
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {bg_color};
                 font-family: 'Inter', 'Roboto', sans-serif;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 font-size: 14px;
                 color: #a9b1d6;
                 font-weight: 500;
-            }
-            QLabel#Title {
+            }}
+            QLabel#Title {{
                 font-size: 24px;
                 font-weight: 800;
                 color: #7aa2f7;
                 min-height: 36px;
                 padding-bottom: 5px;
-            }
-            QLabel#Subtitle {
+            }}
+            QLabel#Subtitle {{
                 font-size: 13px;
                 color: #565f89;
                 margin-bottom: 20px;
-            }
-            QCheckBox {
+            }}
+            QCheckBox {{
                 font-size: 14px;
                 color: #c0caf5;
                 spacing: 12px;
                 padding: 5px 0px;
-            }
-            QCheckBox::indicator {
+            }}
+            QCheckBox::indicator {{
                 width: 22px;
                 height: 22px;
                 border-radius: 6px;
                 border: 2px solid #414868;
                 background-color: #1a1b26;
-            }
-            QCheckBox::indicator:hover {
+            }}
+            QCheckBox::indicator:hover {{
                 border: 2px solid #7aa2f7;
-            }
-            QCheckBox::indicator:checked {
+            }}
+            QCheckBox::indicator:checked {{
                 background-color: #7aa2f7;
                 border: 2px solid #7aa2f7;
-            }
-            QComboBox {
+            }}
+            QComboBox {{
                 background-color: #1a1b26;
                 border: 2px solid #24283b;
                 border-radius: 8px;
@@ -91,23 +99,23 @@ class SettingsDialog(QDialog):
                 font-weight: 600;
                 min-width: 150px;
                 min-height: 34px;
-            }
-            QComboBox:hover {
+            }}
+            QComboBox:hover {{
                 border: 2px solid #414868;
-            }
-            QComboBox:focus {
+            }}
+            QComboBox:focus {{
                 border: 2px solid #7aa2f7;
-            }
-            QComboBox::drop-down {
+            }}
+            QComboBox::drop-down {{
                 border: none;
                 width: 30px;
-            }
-            QFrame#Separator {
+            }}
+            QFrame#Separator {{
                 background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(122, 162, 247, 0), stop:0.5 rgba(122, 162, 247, 150), stop:1 rgba(122, 162, 247, 0));
                 max-height: 1px;
                 margin: 20px 0px;
-            }
-            QPushButton {
+            }}
+            QPushButton {{
                 background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7aa2f7, stop:1 #bb9af7);
                 color: #15161e;
                 border-radius: 8px;
@@ -117,25 +125,31 @@ class SettingsDialog(QDialog):
                 border: none;
                 min-height: 38px;
                 min-width: 120px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8db0fc, stop:1 #cbb1fc);
-            }
-            QPushButton:pressed {
+            }}
+            QPushButton:pressed {{
                 background-color: #7aa2f7;
-            }
-            QPushButton#CancelBtn {
+            }}
+            QPushButton#CancelBtn {{
                 background-color: #1a1b26;
                 border: 2px solid #24283b;
                 color: #a9b1d6;
                 min-height: 34px;
-            }
-            QPushButton#CancelBtn:hover {
+            }}
+            QPushButton#CancelBtn:hover {{
                 border: 2px solid #414868;
                 color: #c0caf5;
-            }
+            }}
         """)
 
+    def _on_profile_changed(self, text):
+        self.update_stylesheet()
+
+    def setup_ui(self):
+        # Modern Premium Styling - Glassmorphism & Neon accents
+        # Stylesheet is now managed dynamically by update_stylesheet
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(18)
@@ -221,6 +235,12 @@ class SettingsDialog(QDialog):
         btn_layout.addWidget(self.save_btn)
 
         layout.addLayout(btn_layout)
+        
+        # Connect combo box to stylesheet updater for real-time blur feedback
+        self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
+        
+        # Initial stylesheet application
+        self.update_stylesheet()
 
     def load_current_settings(self):
         is_dark = self.config.get("dark_mode", True)
