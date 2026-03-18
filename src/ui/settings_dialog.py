@@ -33,22 +33,32 @@ class SettingsDialog(QDialog):
             
         self.setFixedSize(550, 480)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
-        self.setAttribute(Qt.WA_TranslucentBackground, True)
 
         self.setup_ui()
         self.load_current_settings()
 
     def update_stylesheet(self):
-        # Always use a premium glassmorphic background for the settings dialog itself
-        bg_color = "rgba(15, 17, 26, 0.65)"
+        try:
+            current_style = self.profile_combo.currentText()
+        except AttributeError:
+            current_style = ""
 
-        # Dynamically apply KWin Blur using xprop (Works because of QT_QPA_PLATFORM=xcb)
+        is_glass = "Glass" in current_style
+
+        # Toggle translucent background dynamically
+        self.setAttribute(Qt.WA_TranslucentBackground, is_glass)
+        bg_color = "rgba(15, 17, 26, 0.65)" if is_glass else "#0f111a"
+
+        # Dynamically apply/remove KWin Blur using xprop (Works because of QT_QPA_PLATFORM=xcb)
         import platform
         import subprocess
         if platform.system() == 'Linux':
             wid = str(int(self.winId()))
             try:
-                subprocess.run(['xprop', '-f', '_KDE_NET_WM_BLUR_BEHIND_REGION', '32c', '-set', '_KDE_NET_WM_BLUR_BEHIND_REGION', '0', '-id', wid], capture_output=True)
+                if is_glass:
+                    subprocess.run(['xprop', '-f', '_KDE_NET_WM_BLUR_BEHIND_REGION', '32c', '-set', '_KDE_NET_WM_BLUR_BEHIND_REGION', '0', '-id', wid], capture_output=True)
+                else:
+                    subprocess.run(['xprop', '-remove', '_KDE_NET_WM_BLUR_BEHIND_REGION', '-id', wid], capture_output=True)
             except Exception as e:
                 logger.warning(f"Could not set window blur property: {e}")
 
