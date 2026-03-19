@@ -17,3 +17,4 @@ CONTEXT.md
 *.egg-info/
 dist/
 build/
+score.txt

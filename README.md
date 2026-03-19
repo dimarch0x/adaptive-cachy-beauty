@@ -5,6 +5,7 @@
 
   <p>
     <a href="https://github.com/dimarch0x/adaptive-cachy-beauty/actions/workflows/python-app.yml"><img src="https://github.com/dimarch0x/adaptive-cachy-beauty/actions/workflows/python-app.yml/badge.svg" alt="Tests"></a>
+    <a href="https://github.com/dimarch0x/adaptive-cachy-beauty/actions/workflows/python-app.yml"><img src="https://img.shields.io/badge/coverage-41%25-yellow.svg?style=flat" alt="Coverage 41%"></a>
     <a href="https://www.python.org/downloads/release/python-3120/"><img src="https://img.shields.io/badge/Python-3.12+-blue.svg?style=flat&logo=python&logoColor=white" alt="Python 3.12+"></a>
     <a href="https://kde.org/plasma-desktop/"><img src="https://img.shields.io/badge/KDE_Plasma-6.x-1d99f3.svg?style=flat&logo=kde&logoColor=white" alt="KDE Plasma 6.x"></a>
     <a href="https://github.com/vinceliuice/Kvantum"><img src="https://img.shields.io/badge/Theme-Kvantum-ff69b4.svg?style=flat" alt="Kvantum Theme"></a>
