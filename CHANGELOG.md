@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Dynamic Light Theme variant for Settings UI with real-time QSS interpolation
-- Premium UI enhancements: QToolTip styling, QComboBox delegates, and capsule borders
-- Persisted `cached_palette` state in config for zero-delay UI rendering on launch
-- Refined SettingsDialog layout with custom About section and GitHub button
+- **Full SDDM Integration**: Added QML theme, `setup_sddm.sh` helper, and daemon synchronization
+- **Advanced Documentation**: Created `ARCHITECTURE.md` and `TROUBLESHOOTING.md` in `docs/`
+- **Packaging**: Added `PKGBUILD` for Arch Linux (AUR) distribution support
+- **Asset Library**: New premium icons (`shield.svg`, `monitor.svg`, `terminal-icon.svg`) and preview textures
+- **CI/CD Infrastructure**: Added `dependabot.yml` and unified GitHub Actions pipeline
+- **Dynamic Light Theme**: Implemented real-time QSS interpolation for all settings widgets
+- **UI Persistence**: Added `cached_palette` to `config.json` for zero-delay rendering on launch
+- **Refined Layout**: New About section with GitHub integration and capsule-style UI borders
 - Premium Glassmorphism with animated frost overlay and adaptive blur per style
 - Auto (Smart) theme style selection based on wallpaper HCT tone/chroma
 - SDDM Login Screen integration with zero-sudo daily synchronization
