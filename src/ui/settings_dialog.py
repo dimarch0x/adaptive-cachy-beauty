@@ -1,4 +1,6 @@
 import os
+import platform
+import subprocess
 import configparser
 from string import Template
 from PySide6.QtWidgets import (
@@ -15,8 +17,8 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QIcon, QPainter, QColor
+from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve
+from PySide6.QtGui import QFont, QIcon, QPainter, QColor, QPixmap
 
 from config_manager import ConfigManager
 from logger import logger
@@ -25,35 +27,123 @@ from logger import logger
 class SettingsDialog(QDialog):
     settings_saved = Signal()  # Signal emitted when settings are saved
 
+    # --- Glass configuration per style ---
+    _GLASS_PROFILES = {
+        "Neon Glass":     {"alpha": 191, "frost_opacity": 0.06, "blur": True},
+        "Frosted Glass":  {"alpha": 153, "frost_opacity": 0.12, "blur": True},
+        "Material Pure":  {"alpha": 255, "frost_opacity": 0.0,  "blur": False},
+    }
+    _BASE_RGB = (15, 17, 26)  # Dark background base
+
     def __init__(self, config_manager: ConfigManager, parent=None):
         super().__init__(parent)
         self.config = config_manager
 
         self.setWindowTitle("Beauty Engine Settings")
-        
+
         # Load custom app icon
         icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png")
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
-            
+
         self.setFixedSize(600, 600)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         # Always keep translucent — we control opacity via paintEvent
         self.setAttribute(Qt.WA_TranslucentBackground, True)
 
-        # Default background color (will be updated dynamically)
-        self._bg_color = QColor(15, 17, 26, 255)
+        # Animated opacity property (0–255)
+        self._bg_alpha = 255
+        self._bg_color = QColor(*self._BASE_RGB, 255)
+
+        # Frost overlay
+        self._frost_pixmap = self._load_frost_texture()
+        self._frost_opacity = 0.0
+
+        # Animation objects (created once, reused)
+        self._alpha_anim = QPropertyAnimation(self, b"bgAlpha", self)
+        self._alpha_anim.setDuration(300)
+        self._alpha_anim.setEasingCurve(QEasingCurve.InOutCubic)
+
+        self._frost_anim = QPropertyAnimation(self, b"frostOpacity", self)
+        self._frost_anim.setDuration(300)
+        self._frost_anim.setEasingCurve(QEasingCurve.InOutCubic)
 
         self.setup_ui()
         self.load_current_settings()
 
+    # --- Qt Properties for animation ---
+    def _get_bg_alpha(self) -> int:
+        return self._bg_alpha
+
+    def _set_bg_alpha(self, value: int):
+        self._bg_alpha = value
+        r, g, b = self._BASE_RGB
+        self._bg_color = QColor(r, g, b, value)
+        self.update()  # trigger repaint
+
+    bgAlpha = Property(int, _get_bg_alpha, _set_bg_alpha)
+
+    def _get_frost_opacity(self) -> float:
+        return self._frost_opacity
+
+    def _set_frost_opacity(self, value: float):
+        self._frost_opacity = value
+        self.update()  # trigger repaint
+
+    frostOpacity = Property(float, _get_frost_opacity, _set_frost_opacity)
+
+    # --- Texture loading ---
+    def _load_frost_texture(self) -> QPixmap:
+        """Load the tileable frost noise texture."""
+        tex_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "resources", "textures", "frost_noise.png"
+        )
+        if os.path.exists(tex_path):
+            return QPixmap(tex_path)
+        logger.warning(f"Frost texture not found at {tex_path}")
+        return QPixmap()
+
+    # --- KWin Blur helper ---
+    def _set_kwin_blur(self, enabled: bool):
+        """Toggle KWin blur-behind via xprop (works under xcb / XWayland)."""
+        if platform.system() != "Linux":
+            return
+        try:
+            wid = str(int(self.winId()))
+            if enabled:
+                subprocess.run(
+                    ["xprop", "-f", "_KDE_NET_WM_BLUR_BEHIND_REGION", "32c",
+                     "-set", "_KDE_NET_WM_BLUR_BEHIND_REGION", "0", "-id", wid],
+                    capture_output=True,
+                )
+            else:
+                subprocess.run(
+                    ["xprop", "-remove", "_KDE_NET_WM_BLUR_BEHIND_REGION", "-id", wid],
+                    capture_output=True,
+                )
+        except Exception as e:
+            logger.warning(f"Could not set window blur property: {e}")
+
+    # --- Paint ---
     def paintEvent(self, event):
-        """Manually paint the dialog background to control transparency."""
+        """Paint semi-transparent bg + tileable frost noise overlay."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
+
+        # 1) Draw rounded semi-transparent background
         painter.setBrush(self._bg_color)
         painter.setPen(Qt.NoPen)
         painter.drawRoundedRect(self.rect(), 12, 12)
+
+        # 2) Draw frost noise overlay (tiled) with current opacity
+        if self._frost_opacity > 0.01 and not self._frost_pixmap.isNull():
+            painter.setOpacity(self._frost_opacity)
+            pw, ph = self._frost_pixmap.width(), self._frost_pixmap.height()
+            for x in range(0, self.width(), pw):
+                for y in range(0, self.height(), ph):
+                    painter.drawPixmap(x, y, self._frost_pixmap)
+            painter.setOpacity(1.0)
+
         painter.end()
         super().paintEvent(event)
 
@@ -71,29 +161,25 @@ class SettingsDialog(QDialog):
         except AttributeError:
             current_style = ""
 
-        is_glass = "Glass" in current_style
+        # Resolve glass profile for this style
+        profile = self._GLASS_PROFILES.get(current_style, self._GLASS_PROFILES["Material Pure"])
+        target_alpha = profile["alpha"]
+        target_frost = profile["frost_opacity"]
 
-        # Set bg color: semi-transparent for Glass, fully opaque for others
-        if is_glass:
-            self._bg_color = QColor(15, 17, 26, 166)  # ~65% opacity
-        else:
-            self._bg_color = QColor(15, 17, 26, 255)  # 100% opaque
+        # Animate background opacity
+        self._alpha_anim.stop()
+        self._alpha_anim.setStartValue(self._bg_alpha)
+        self._alpha_anim.setEndValue(target_alpha)
+        self._alpha_anim.start()
 
-        # Dynamically apply/remove KWin Blur using xprop
-        import platform
-        import subprocess
-        if platform.system() == 'Linux':
-            wid = str(int(self.winId()))
-            try:
-                if is_glass:
-                    subprocess.run(['xprop', '-f', '_KDE_NET_WM_BLUR_BEHIND_REGION', '32c', '-set', '_KDE_NET_WM_BLUR_BEHIND_REGION', '0', '-id', wid], capture_output=True)
-                else:
-                    subprocess.run(['xprop', '-remove', '_KDE_NET_WM_BLUR_BEHIND_REGION', '-id', wid], capture_output=True)
-            except Exception as e:
-                logger.warning(f"Could not set window blur property: {e}")
+        # Animate frost overlay opacity
+        self._frost_anim.stop()
+        self._frost_anim.setStartValue(self._frost_opacity)
+        self._frost_anim.setEndValue(target_frost)
+        self._frost_anim.start()
 
-        # Force repaint with new bg color
-        self.update()
+        # Toggle KWin blur
+        self._set_kwin_blur(profile["blur"])
 
         # Define default dynamic colors mapped from the QSS layout
         colors = {
