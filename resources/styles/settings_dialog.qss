@@ -17,6 +17,30 @@ QLabel {
     color: $text_secondary;
     font-weight: 500;
 }
+QFrame#AppHeader {
+    background: transparent;
+    border-bottom: 1px solid $header_border;
+    border-top: $header_top_border;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+}
+QLabel#AppTitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: $text_primary;
+}
+QPushButton#AppCloseBtn {
+    background: transparent;
+    color: $text_secondary;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+}
+QPushButton#AppCloseBtn:hover {
+    color: $error_color;
+    background: rgba(255, 0, 0, 0.1);
+    border-radius: 13px;
+}
 QLabel#Title {
     font-size: 26px;
     font-weight: 800;

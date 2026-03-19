@@ -16,12 +16,126 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStyledItemDelegate,
 )
-from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve, QUrl
+from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve, QUrl, QPoint
 from PySide6.QtGui import QIcon, QPainter, QColor, QPixmap, QDesktopServices
 
 from config_manager import ConfigManager
 from logger import logger
 
+class SettingsHeader(QFrame):
+    """Custom draggable Header Bar (CSD)."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.drag_pos = None
+        self.setObjectName("AppHeader")
+        self.setFixedHeight(45)
+        
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(16, 0, 16, 0)
+        
+        icon_lbl = QLabel()
+        icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png")
+        if os.path.exists(icon_path):
+            icon_lbl.setPixmap(QPixmap(icon_path).scaled(18, 18, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        icon_lbl.setObjectName("AppIcon")
+        layout.addWidget(icon_lbl)
+        
+        title_lbl = QLabel("Beauty Engine Settings")
+        title_lbl.setObjectName("AppTitle")
+        layout.addWidget(title_lbl)
+        
+        layout.addStretch()
+        
+        close_btn = QPushButton("✕")
+        close_btn.setObjectName("AppCloseBtn")
+        close_btn.setFixedSize(26, 26)
+        close_btn.setCursor(Qt.PointingHandCursor)
+        close_btn.clicked.connect(self.window().close)
+        layout.addWidget(close_btn)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.drag_pos = event.globalPosition().toPoint()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton and self.drag_pos is not None:
+            diff = event.globalPosition().toPoint() - self.drag_pos
+            self.window().move(self.window().pos() + diff)
+            self.drag_pos = event.globalPosition().toPoint()
+            event.accept()
+
+class AnimatedToggle(QCheckBox):
+    """Custom iOS/Android style animated toggle switch."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(48, 24)
+        self.setCursor(Qt.PointingHandCursor)
+
+        self._accent_color = QColor("#9ece6a")  # Default placeholder
+        self._thumb_position = 0.0
+
+        self.animation = QPropertyAnimation(self, b"thumbPosition")
+        self.animation.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animation.setDuration(250)
+
+        self.stateChanged.connect(self._setup_animation)
+
+    def _setup_animation(self, value):
+        self.animation.stop()
+        if value:
+            self.animation.setEndValue(1.0)
+        else:
+            self.animation.setEndValue(0.0)
+        self.animation.start()
+
+    @Property(float)
+    def thumbPosition(self):
+        return self._thumb_position
+
+    @thumbPosition.setter
+    def thumbPosition(self, pos):
+        self._thumb_position = pos
+        self.update()
+
+    def hitButton(self, pos: QPoint):
+        return self.contentsRect().contains(pos)
+
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+
+        off_bg = QColor(120, 120, 120, 100) # Muted OFF grey
+
+        # Lerp color from off_bg to _accent_color
+        r = off_bg.red() + (self._accent_color.red() - off_bg.red()) * self._thumb_position
+        g = off_bg.green() + (self._accent_color.green() - off_bg.green()) * self._thumb_position
+        b = off_bg.blue() + (self._accent_color.blue() - off_bg.blue()) * self._thumb_position
+        a = off_bg.alpha() + (self._accent_color.alpha() - off_bg.alpha()) * self._thumb_position
+
+        current_bg = QColor(int(r), int(g), int(b), int(a))
+
+        p.setPen(Qt.NoPen)
+        p.setBrush(current_bg)
+
+        rect = self.contentsRect()
+        track_radius = rect.height() / 2
+        p.drawRoundedRect(rect, track_radius, track_radius)
+
+        p.setBrush(QColor("#ffffff"))
+        thumb_radius = track_radius - 2
+        thumb_range = rect.width() - (thumb_radius * 2) - 4
+        current_x = 2 + (thumb_range * self._thumb_position)
+
+        # Draw the thumb circle
+        p.drawEllipse(int(current_x), 2, int(thumb_radius * 2), int(thumb_radius * 2))
+        p.end()
+
+    def update_accent(self, hex_color):
+        self._accent_color = QColor(hex_color)
+        if self.isChecked():
+            self._thumb_position = 1.0
+        self.update()
 
 class SettingsDialog(QDialog):
     settings_saved = Signal()  # Signal emitted when settings are saved
@@ -46,8 +160,8 @@ class SettingsDialog(QDialog):
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
 
-        self.setFixedSize(640, 680)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setFixedSize(640, 740)
+        self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint)
         # Always keep translucent — we control opacity via paintEvent
         self.setAttribute(Qt.WA_TranslucentBackground, True)
 
@@ -133,7 +247,7 @@ class SettingsDialog(QDialog):
         # 1) Draw rounded semi-transparent background
         painter.setBrush(self._bg_color)
         painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(self.rect(), 12, 12)
+        painter.drawRoundedRect(self.rect(), 24, 24)
 
         # 2) Draw frost noise overlay (tiled) with current opacity
         if self._frost_opacity > 0.01 and not self._frost_pixmap.isNull():
@@ -195,13 +309,22 @@ class SettingsDialog(QDialog):
 
         p = self.current_palette or {}
 
+        is_pure = current_style == "Material Pure"
+
         if is_dark:
+            c_bg = "#24283B" if is_pure else "rgba(255, 255, 255, 0.05)"
+            c_border = "#2F3549" if is_pure else "rgba(255, 255, 255, 0.08)"
+            h_border = "#2F3549" if is_pure else "rgba(255, 255, 255, 0.1)"
+            h_top_border = "none" if is_pure else "1.5px solid rgba(255, 255, 255, 0.2)"
+
             colors = {
                 "text_primary": p.get("on_background", "#ffffff"),
                 "text_secondary": p.get("on_surface_variant", "#a9b1d6"),
                 "accent_color": p.get("primary", "#2f64ff"),
-                "card_bg": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(25, 27, 36, 0.8), stop:1 rgba(15, 17, 26, 0.9))",
-                "card_border": "rgba(255, 255, 255, 0.08)",
+                "card_bg": c_bg,
+                "card_border": c_border,
+                "header_border": h_border,
+                "header_top_border": h_top_border,
                 "checkbox_bg": "rgba(0, 0, 0, 0.3)",
                 "checkbox_hover": "rgba(0, 0, 0, 0.4)",
                 "checkbox_border": "rgba(255, 255, 255, 0.1)",
@@ -229,12 +352,19 @@ class SettingsDialog(QDialog):
                 "chevron_path": chevron_path,
             }
         else:
+            c_bg = "#FFFFFF" if is_pure else "rgba(255, 255, 255, 0.6)"
+            c_border = "#D1D8E0" if is_pure else "rgba(0, 0, 0, 0.08)"
+            h_border = "#D1D8E0" if is_pure else "rgba(0, 0, 0, 0.1)"
+            h_top_border = "none" if is_pure else "1.5px solid rgba(255, 255, 255, 0.6)"
+
             colors = {
                 "text_primary": p.get("on_background", "#1a1c23"),
                 "text_secondary": p.get("on_surface_variant", "#4a4f68"),
                 "accent_color": p.get("primary", "#2f64ff"),
-                "card_bg": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 255, 0.85), stop:1 rgba(240, 242, 248, 0.95))",
-                "card_border": "rgba(0, 0, 0, 0.08)",
+                "card_bg": c_bg,
+                "card_border": c_border,
+                "header_border": h_border,
+                "header_top_border": h_top_border,
                 "checkbox_bg": "rgba(0, 0, 0, 0.05)",
                 "checkbox_hover": "rgba(0, 0, 0, 0.08)",
                 "checkbox_border": "rgba(0, 0, 0, 0.1)",
@@ -284,6 +414,33 @@ class SettingsDialog(QDialog):
             if hasattr(self, "mockup_preview"):
                 # Mockup is static image, but we can tint it
                 pass
+
+            # Toggle card shadows
+            for shadow_attr in ["main_card_shadow", "features_card_shadow", "preview_card_shadow"]:
+                card_shadow = getattr(self, shadow_attr, None)
+                if card_shadow:
+                    card_shadow.setEnabled(not is_pure)
+
+            # App Icon Neon Glow
+            if hasattr(self, "header_bar"):
+                icon_lbl = self.header_bar.findChild(QLabel, "AppIcon")
+                if icon_lbl:
+                    if current_style == "Neon Glass" and "accent_color" in colors:
+                        glow = QGraphicsDropShadowEffect(self)
+                        glow.setBlurRadius(20)
+                        glow.setOffset(0, 0)
+                        accent = QColor(colors["accent_color"])
+                        accent.setAlpha(180)
+                        glow.setColor(accent)
+                        icon_lbl.setGraphicsEffect(glow)
+                    else:
+                        icon_lbl.setGraphicsEffect(None)
+            
+            # Sub-widget Accent Color Injection
+            for toggle_attr in ["kvantum_check", "konsole_check", "sddm_check"]:
+                toggle = getattr(self, toggle_attr, None)
+                if hasattr(toggle, "update_accent"):
+                    toggle.update_accent(colors.get("accent_color", "#74B816"))
         else:
             logger.warning(f"Extracted QSS not found at {qss_path}. Reverting to no style.")
 
@@ -292,17 +449,28 @@ class SettingsDialog(QDialog):
 
     def setup_ui(self):
         self._main_layout = QVBoxLayout(self)
-        self._main_layout.setContentsMargins(32, 28, 32, 28)
-        self._main_layout.setSpacing(16)
+        self._main_layout.setContentsMargins(0, 0, 0, 0)
+        self._main_layout.setSpacing(0)
+
+        # 1. Custom Header Bar
+        self.header_bar = SettingsHeader(self)
+        self._main_layout.addWidget(self.header_bar)
+
+        # 2. Main content container (to keep paddings)
+        self.content_widget = QWidget()
+        self.content_layout = QVBoxLayout(self.content_widget)
+        self.content_layout.setContentsMargins(32, 20, 32, 28)
+        self.content_layout.setSpacing(16)
 
         self._build_header()
         self._build_main_card()
         # Horizontal layout for the bottom two-column section
         self._build_bottom_section()
 
-        self._main_layout.addStretch()
-
+        self.content_layout.addStretch()
         self._build_actions()
+        
+        self._main_layout.addWidget(self.content_widget)
         self._apply_popup_transparency()
 
     def _build_header(self):
@@ -317,7 +485,7 @@ class SettingsDialog(QDialog):
         subtitle.setObjectName("Subtitle")
         header_layout.addWidget(subtitle)
 
-        self._main_layout.addLayout(header_layout)
+        self.content_layout.addLayout(header_layout)
 
     def _build_main_card(self):
         main_card = QFrame()
@@ -332,6 +500,7 @@ class SettingsDialog(QDialog):
         shadow.setColor(QColor(0, 0, 0, 50))
         shadow.setOffset(0, 5)
         main_card.setGraphicsEffect(shadow)
+        self.main_card_shadow = shadow
 
         grid.setSpacing(15)
         grid.setColumnStretch(0, 1)
@@ -385,7 +554,7 @@ class SettingsDialog(QDialog):
         self._build_features_card(bottom_layout)
         self._build_preview_card(bottom_layout)
 
-        self._main_layout.addLayout(bottom_layout)
+        self.content_layout.addLayout(bottom_layout)
 
     def _build_features_card(self, parent_layout):
         card = QFrame()
@@ -427,8 +596,7 @@ class SettingsDialog(QDialog):
 
             row.addStretch()
 
-            check = QCheckBox()
-            check.setCursor(Qt.PointingHandCursor)
+            check = AnimatedToggle()
             setattr(self, attr_name, check)
             row.addWidget(check)
 
@@ -470,6 +638,7 @@ class SettingsDialog(QDialog):
         shadow.setColor(QColor(0, 0, 0, 50))
         shadow.setOffset(0, 5)
         card.setGraphicsEffect(shadow)
+        self.features_card_shadow = shadow
 
         parent_layout.addWidget(card, 1)
 
@@ -526,6 +695,7 @@ class SettingsDialog(QDialog):
         shadow.setColor(QColor(0, 0, 0, 60))
         shadow.setOffset(0, 8)
         card.setGraphicsEffect(shadow)
+        self.preview_card_shadow = shadow
 
         parent_layout.addWidget(card, 1)
 
@@ -552,8 +722,7 @@ class SettingsDialog(QDialog):
 
         btn_layout.addWidget(self.cancel_btn)
         btn_layout.addWidget(self.save_btn)
-
-        self._main_layout.addLayout(btn_layout)
+        self.content_layout.addLayout(btn_layout)
 
     def _apply_popup_transparency(self):
         for combo in (self.mode_combo, self.contrast_combo, self.profile_combo):
