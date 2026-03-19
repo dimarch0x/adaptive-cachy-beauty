@@ -1,0 +1,37 @@
+name: Feature Request
+description: Suggest an idea, new integration, or a new Aesthetic Style
+title: "[FEAT] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "We are always looking to expand the engine! 🚀 Share your vision for the ultimate Linux Rice below."
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Is your feature request related to a problem?"
+      description: "A clear and concise description of what the problem is. Ex. I'm always frustrated when [style] looks like..."
+    validations:
+      required: false
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Describe the solution you'd like"
+      description: "A clear and concise description of what you want to happen."
+      placeholder: "I would like an integration for NeoVim that updates my colorscheme on the fly..."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Describe alternatives you've considered"
+      description: "A clear and concise description of any alternative solutions or features you've considered."
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: "Additional context or Mockups"
+      description: "Add any other context, screenshots, or code examples about the feature request here."
+    validations:
+      required: false

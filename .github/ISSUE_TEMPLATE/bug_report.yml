@@ -1,0 +1,47 @@
+name: Bug Report
+description: Create a report to help us improve Adaptive Cachy Beauty
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for taking the time to fill out this bug report! Please provide as much detail as possible so we can squash the bug quickly."
+  - type: input
+    id: os_version
+    attributes:
+      label: "OS & KDE Plasma Version"
+      description: "e.g., CachyOS, KDE Plasma 6.6.1, Wayland"
+      placeholder: "CachyOS / KDE Plasma 6.x / X11 or Wayland"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Describe the bug"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "When I click 'Save & Apply', the terminal transparency doesn't update..."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "To Reproduce"
+      description: "Steps to reproduce the behavior."
+      placeholder: "1. Open settings dialog\n2. Change theme style to 'Neon Glass'\n3. Observe the bug..."
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Logs from Terminal or `run.sh`"
+      description: "Please paste any Python errors or traceback logs. (Use code blocks ``` )"
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected behavior"
+      description: "A clear and concise description of what you expected to happen."
+    validations:
+      required: true
