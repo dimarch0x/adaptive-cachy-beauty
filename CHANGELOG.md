@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Config defaults now include `enable_terminals`, `enable_sddm`, and `theme_style`
+- Settings UI colors now dynamically update when theme changes in the background
 - Test wallpaper asset bundled locally (no more system path dependency)
 - `YOUR_GITHUB_USERNAME` placeholder replaced in README
 - Removed `score.txt` and `.coverage` from repository tracking

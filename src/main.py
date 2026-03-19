@@ -6,7 +6,7 @@ os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PySide6.QtGui import QIcon, QAction
-from PySide6.QtCore import QCoreApplication, QTimer, QObject, Slot, SLOT
+from PySide6.QtCore import QCoreApplication, QTimer, QObject, Slot, SLOT, Signal
 from PySide6.QtDBus import QDBusConnection
 
 from core.wallpaper_analyzer import WallpaperAnalyzer
@@ -21,6 +21,8 @@ from logger import logger
 
 
 class BeautyEngineTray(QObject):
+    theme_refreshed = Signal()
+
     def __init__(self):
         super().__init__()
         self.app = QApplication(sys.argv)
@@ -173,6 +175,7 @@ class BeautyEngineTray(QObject):
                 3000,
             )
             logger.info("Application flow completed successfully.")
+            self.theme_refreshed.emit()
 
         except Exception as e:
             logger.exception(f"Error generating theme: {e}")
@@ -184,6 +187,8 @@ class BeautyEngineTray(QObject):
         if self.settings_dialog is None:
             self.settings_dialog = SettingsDialog(self.config)
             self.settings_dialog.settings_saved.connect(self.refresh_theme)
+            # Connect to background refresh signal to update UI colors automatically
+            self.theme_refreshed.connect(self.settings_dialog.update_stylesheet)
 
         # Bring to front
         self.settings_dialog.show()
