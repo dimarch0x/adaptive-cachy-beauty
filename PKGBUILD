@@ -1,6 +1,6 @@
 # Maintainer: Dmitry <dimarch0x@gmail.com>
 pkgname=adaptive-cachy-beauty-git
-pkgver=0.6.0.r0.gdb457d4
+pkgver=1.0.0
 pkgrel=1
 pkgdesc="Premium Adaptive Material You theming engine for CachyOS and KDE Plasma"
 arch=('any')
