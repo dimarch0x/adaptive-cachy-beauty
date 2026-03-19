@@ -12,6 +12,7 @@ class ConfigManager:
             "enable_kvantum": True,
             "enable_konsole": True,
             "enable_terminals": True,
+            "enable_sddm": True,
             "contrast_level": "standard",
             "theme_style": "Neon Glass",
         }

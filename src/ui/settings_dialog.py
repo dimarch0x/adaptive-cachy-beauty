@@ -301,6 +301,7 @@ class SettingsDialog(QDialog):
         self.profile_combo = QComboBox()
         self.profile_combo.addItems(
             [
+                "Auto (Smart)",
                 "Neon Glass",
                 "Frosted Glass",
                 "Material Pure",
@@ -335,6 +336,10 @@ class SettingsDialog(QDialog):
         self.konsole_check = QCheckBox("Enable Konsole Profile Generation")
         self.konsole_check.setMinimumHeight(38)
         toggles_layout.addWidget(self.konsole_check)
+
+        self.sddm_check = QCheckBox("Enable SDDM Login Screen Sync")
+        self.sddm_check.setMinimumHeight(38)
+        toggles_layout.addWidget(self.sddm_check)
 
         self._main_layout.addWidget(toggles_card)
 
@@ -390,7 +395,9 @@ class SettingsDialog(QDialog):
         self.profile_combo.setCurrentText(matched_profile)
 
         self.kvantum_check.setChecked(bool(self.config.get("enable_kvantum", True)))
-        self.konsole_check.setChecked(bool(self.config.get("enable_konsole", True)))
+        self.konsole_check.setChecked(self.config.get("enable_konsole", True))
+        self.sddm_check.setChecked(self.config.get("enable_sddm", True))
+        self.mode_combo.setCurrentText(self.config.get("theme_mode", "Dark"))
 
     def save_settings(self):
         is_dark = self.mode_combo.currentText() == "Dark"
@@ -400,6 +407,8 @@ class SettingsDialog(QDialog):
         self.config.set("theme_style", self.profile_combo.currentText())
         self.config.set("enable_kvantum", self.kvantum_check.isChecked())
         self.config.set("enable_konsole", self.konsole_check.isChecked())
+        self.config.set("enable_sddm", self.sddm_check.isChecked())
+        self.config.set("theme_mode", self.mode_combo.currentText())
 
         logger.info("User settings saved from Settings Dialog.")
         self.settings_saved.emit()

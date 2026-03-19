@@ -10,18 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Premium Glassmorphism with animated frost overlay and adaptive blur per style
+- Auto (Smart) theme style selection based on wallpaper HCT tone/chroma
+- SDDM Login Screen integration with zero-sudo daily synchronization
+- Custom Glassmorphism SDDM theme (QML-based)
 - GitHub Actions CI pipeline with headless PySide6 testing
 - Community Standards: CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md
 - Issue and Pull Request templates
 - CODEOWNERS for automated review assignment
-- CI status badge in README
+- CI status badge and Coverage badge (41%) in README
 - Ruff linting in CI pipeline
 
 ### Fixed
 
-- Config defaults now include `enable_terminals` and `theme_style`
+- Config defaults now include `enable_terminals`, `enable_sddm`, and `theme_style`
 - Test wallpaper asset bundled locally (no more system path dependency)
 - `YOUR_GITHUB_USERNAME` placeholder replaced in README
+- Removed `score.txt` and `.coverage` from repository tracking
 
 ## [0.5.0-beta] - 2026-03-18
 

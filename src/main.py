@@ -14,6 +14,7 @@ from core.theme_generator import ThemeGenerator
 from integrations.plasma_theme_manager import PlasmaThemeManager
 from integrations.kvantum_generator import KvantumGenerator
 from integrations.terminal_theme_manager import TerminalThemeManager
+from integrations.sddm_theme_manager import SddmThemeManager
 from ui.settings_dialog import SettingsDialog
 from config_manager import ConfigManager
 from logger import logger
@@ -31,6 +32,7 @@ class BeautyEngineTray(QObject):
         self.analyzer = WallpaperAnalyzer()
         self.generator = ThemeGenerator()
         self.theme_manager = PlasmaThemeManager()
+        self.sddm_manager = SddmThemeManager()
         self.kvantum_generator = KvantumGenerator()
         self.terminal_theme_manager = TerminalThemeManager()
 
@@ -157,6 +159,12 @@ class BeautyEngineTray(QObject):
             # Apply to Terminals (Alacritty/Kitty)
             if self.config.get("enable_terminals", True):
                 self.terminal_theme_manager.apply_themes(palette, style=style)
+
+            # Apply to SDDM
+            if self.config.get("enable_sddm", True):
+                self.sddm_manager.apply_to_sddm(
+                    wallpaper_path, palette, theme_style=style
+                )
 
             self.tray.showMessage(
                 "Success",

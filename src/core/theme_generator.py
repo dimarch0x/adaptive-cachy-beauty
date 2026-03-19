@@ -262,6 +262,15 @@ class ThemeGenerator:
         hct_color = Hct.from_int(dominant_argb)
 
         style = style.strip().lower()
+        if style == "auto (smart)":
+            if hct_color.tone < 40 and hct_color.chroma > 40:
+                style = "neon glass"
+            elif 40 <= hct_color.tone <= 70 and hct_color.chroma < 30:
+                style = "frosted glass"
+            else:
+                style = "material pure"
+            logger.info(f"Auto (Smart) style selected: {style} (Tone: {hct_color.tone:.1f}, Chroma: {hct_color.chroma:.1f})")
+
         if style == "neon glass":
             scheme = SchemeVibrant(hct_color, is_dark, 0.0)
         elif style == "frosted glass":

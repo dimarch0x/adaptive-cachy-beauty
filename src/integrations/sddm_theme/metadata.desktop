@@ -1,0 +1,10 @@
+[SddmGreeterTheme]
+Name=Adaptive Cachy
+Description=A dynamic glassmorphism theme that syncs with your desktop wallpaper and colors.
+Author=Adaptive Cachy Beauty
+Version=1.0
+Type=sddm-theme
+Type=greeter
+Theme-Id=AdaptiveCachy
+MainScript=Main.qml
+ConfigFile=theme.conf
