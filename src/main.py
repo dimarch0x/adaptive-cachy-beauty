@@ -189,12 +189,12 @@ class BeautyEngineTray(QObject):
         if self.settings_dialog is None:
             self.settings_dialog = SettingsDialog(self.config)
             self.settings_dialog.settings_saved.connect(self.refresh_theme)
-            
+
             def on_theme_refreshed():
                 if hasattr(self, "current_palette"):
                     self.settings_dialog.current_palette = self.current_palette
                     self.settings_dialog.update_stylesheet()
-            
+
             # Connect to background refresh signal to update UI colors automatically
             self.theme_refreshed.connect(on_theme_refreshed)
 

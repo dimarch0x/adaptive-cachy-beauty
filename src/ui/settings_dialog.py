@@ -186,7 +186,7 @@ class SettingsDialog(QDialog):
         except AttributeError:
             # Fallback during early init before mode_combo exists
             is_dark = self.config.get("dark_mode", True)
-            
+
         # Dynamically push background repaints to the root QDialog container
         self._BASE_RGB = (15, 17, 26) if is_dark else (245, 245, 250)
         if hasattr(self, "_bg_color"):
@@ -268,19 +268,19 @@ class SettingsDialog(QDialog):
             with open(qss_path, "r", encoding="utf-8") as f:
                 stylesheet = f.read()
             self.setStyleSheet(Template(stylesheet).safe_substitute(colors))
-            
+
             # Update Preview Swatches
             if hasattr(self, "primary_swatch") and "accent_color" in colors:
                 self.primary_swatch.setStyleSheet(f"#Swatch0 {{ background-color: {colors['accent_color']}; border-radius: 12px; border: 2px solid {colors['swatch_border']}; }}")
             if hasattr(self, "bg_swatch") and "text_primary" in colors:
                 self.bg_swatch.setStyleSheet(f"#Swatch1 {{ background-color: {colors.get('menu_bg', '#121212')}; border-radius: 12px; border: 2px solid {colors['accent_color']}; }}")
-            
+
             # Update Mockup and Glow
             if hasattr(self, "save_glow") and "accent_color" in colors:
                 accent = QColor(colors["accent_color"])
                 accent.setAlpha(180 if is_dark else 100)
                 self.save_glow.setColor(accent)
-            
+
             if hasattr(self, "mockup_preview"):
                 # Mockup is static image, but we can tint it
                 pass
@@ -299,7 +299,7 @@ class SettingsDialog(QDialog):
         self._build_main_card()
         # Horizontal layout for the bottom two-column section
         self._build_bottom_section()
-        
+
         self._main_layout.addStretch()
 
         self._build_actions()
@@ -336,7 +336,7 @@ class SettingsDialog(QDialog):
         grid.setSpacing(15)
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 2)
-        
+
         # Theme Mode
         mode_label = QLabel("Theme Mode:")
         mode_label.setFixedWidth(120)
@@ -381,10 +381,10 @@ class SettingsDialog(QDialog):
     def _build_bottom_section(self):
         bottom_layout = QHBoxLayout()
         bottom_layout.setSpacing(16)
-        
+
         self._build_features_card(bottom_layout)
         self._build_preview_card(bottom_layout)
-        
+
         self._main_layout.addLayout(bottom_layout)
 
     def _build_features_card(self, parent_layout):
@@ -393,16 +393,16 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(card)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(12)
-        
+
         label = QLabel("FEATURES")
         label.setObjectName("Subtitle")
         label.setStyleSheet("margin-bottom: 10px; font-weight: 800; letter-spacing: 1px;")
         layout.addWidget(label)
-        
+
         def add_feature(icon_name, text, attr_name):
             row = QHBoxLayout()
             row.setContentsMargins(0, 0, 0, 0)
-            
+
             icon_lbl = QLabel()
             icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", icon_name)
             if os.path.exists(icon_path):
@@ -418,26 +418,26 @@ class SettingsDialog(QDialog):
                 painter.end()
                 icon_lbl.setPixmap(tinted)
             row.addWidget(icon_lbl)
-            
+
             label = QLabel(text)
             label.setObjectName("FeatureLabel")
             label.setWordWrap(True)
             label.setMinimumHeight(35)
             row.addWidget(label)
-            
+
             row.addStretch()
-            
+
             check = QCheckBox()
             check.setCursor(Qt.PointingHandCursor)
             setattr(self, attr_name, check)
             row.addWidget(check)
-            
+
             layout.addLayout(row)
 
         add_feature("monitor.svg", "Enable Kvantum Window Theming", "kvantum_check")
         add_feature("terminal-icon.svg", "Enable Konsole Profile Gen", "konsole_check")
         add_feature("shield.svg", "Enable SDDM Login Sync", "sddm_check")
-        
+
         layout.addStretch(1)
 
         # About / Repo section at the bottom
@@ -463,14 +463,14 @@ class SettingsDialog(QDialog):
         )
         about_row.addWidget(repo_btn)
         layout.addLayout(about_row)
-        
+
         # Add shadow
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(20)
         shadow.setColor(QColor(0, 0, 0, 50))
         shadow.setOffset(0, 5)
         card.setGraphicsEffect(shadow)
-        
+
         parent_layout.addWidget(card, 1)
 
     def _build_preview_card(self, parent_layout):
@@ -478,12 +478,12 @@ class SettingsDialog(QDialog):
         card.setObjectName("Card")
         layout = QVBoxLayout(card)
         layout.setContentsMargins(20, 20, 20, 20)
-        
+
         label = QLabel("Theme Preview")
         label.setObjectName("Subtitle")
         label.setStyleSheet("margin-bottom: 20px; font-weight: 800; letter-spacing: 0.5px;")
         layout.addWidget(label)
-        
+
         # Swatches Row
         swatch_layout = QHBoxLayout()
         self.primary_swatch = QLabel()
@@ -491,7 +491,7 @@ class SettingsDialog(QDialog):
         self.primary_swatch.setFixedSize(50, 50)
         self.primary_swatch.setToolTip("Primary Accent")
         swatch_layout.addWidget(self.primary_swatch)
-        
+
         self.bg_swatch = QLabel()
         self.bg_swatch.setObjectName("Swatch1")
         self.bg_swatch.setFixedSize(50, 50)
@@ -499,17 +499,17 @@ class SettingsDialog(QDialog):
         swatch_layout.addWidget(self.bg_swatch)
         swatch_layout.addStretch()
         layout.addLayout(swatch_layout)
-        
+
         layout.addSpacing(16)
-        
+
         # Desktop Mockup Container
         self.mockup = QFrame()
         self.mockup.setObjectName("Mockup")
         self.mockup.setMinimumHeight(110)
-        
+
         mockup_layout = QVBoxLayout(self.mockup)
         mockup_layout.setContentsMargins(0, 10, 0, 0)
-        
+
         self.mockup_preview = QLabel()
         img_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "textures", "ui_preview.png")
         if os.path.exists(img_path):
@@ -517,16 +517,16 @@ class SettingsDialog(QDialog):
             self.mockup_preview.setPixmap(pix)
         self.mockup_preview.setAlignment(Qt.AlignBottom | Qt.AlignCenter)
         mockup_layout.addWidget(self.mockup_preview, 0, Qt.AlignBottom | Qt.AlignCenter)
-        
+
         layout.addWidget(self.mockup, 1)
-        
+
         # Add shadow
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(25)
         shadow.setColor(QColor(0, 0, 0, 60))
         shadow.setOffset(0, 8)
         card.setGraphicsEffect(shadow)
-        
+
         parent_layout.addWidget(card, 1)
 
     def _build_actions(self):
@@ -541,7 +541,7 @@ class SettingsDialog(QDialog):
         self.save_btn = QPushButton("Save && Apply")
         self.save_btn.setFixedSize(160, 36)
         self.save_btn.clicked.connect(self.save_settings)
-        
+
         # Glow Effect for Save Button
         save_glow = QGraphicsDropShadowEffect(self)
         save_glow.setBlurRadius(25)
@@ -549,7 +549,7 @@ class SettingsDialog(QDialog):
         save_glow.setColor(QColor(109, 178, 255, 180)) # Default glow
         self.save_btn.setGraphicsEffect(save_glow)
         self.save_glow = save_glow # Store reference to update color later
-        
+
         btn_layout.addWidget(self.cancel_btn)
         btn_layout.addWidget(self.save_btn)
 
