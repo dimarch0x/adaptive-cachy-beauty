@@ -7,7 +7,7 @@
 ## Checklist
 
 - [ ] I have read the [CONTRIBUTING.md](CONTRIBUTING.md) document.
-- [ ] My code strictly follows the King Swarm conventions (`feat:`, `fix:`, `refactor:`).
+- [ ] My code strictly follows the Conventional Commits specification (`feat:`, `fix:`, `refactor:`).
 - [ ] I have run the `pytest tests/` suite and all tests pass.
 - [ ] Any UI modifications include a screenshot below demonstrating the "wow" aesthetic factor.
 

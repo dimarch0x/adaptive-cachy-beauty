@@ -35,9 +35,9 @@ We strictly separate our logic for highly maintainable code:
 
 *Do not mix UI code with core generation logic.*
 
-## 3. King Swarm Coding Standards
+## 3. Project Coding Standards
 
-We enforce a few strict rules (inspired by our internal King Swarm directives):
+We enforce a few strict rules to maintain high quality:
 
 - **Aesthetic Excellence:** If you are modifying the UI, it must look "wow" at first glance. Generic designs are unacceptable. Use HSL tuning, dark modes, and dynamic animations where appropriate.
 - **Type Hints:** Use standard Python type hinting for function signatures (`def do_magic(value: int) -> str:`).
@@ -61,6 +61,6 @@ If you add a new integration or feature, please include a test for it or ask the
 ## 5. Pull Request Process
 
 1. Fork the repository and create your branch from `master`.
-2. Push your commits following the [Conventional Commits](#3-king-swarm-coding-standards) format.
+2. Push your commits following the [Project Coding Standards](#3-project-coding-standards) format.
 3. Open a Pull Request referencing any related open Issues.
 4. We will review your code as soon as possible!
