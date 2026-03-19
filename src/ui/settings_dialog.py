@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFrame,
+    QWidget,
     QGraphicsDropShadowEffect,
     QGridLayout,
     QSizePolicy,
@@ -315,12 +316,13 @@ class SettingsDialog(QDialog):
             c_bg = "#24283B" if is_pure else "rgba(255, 255, 255, 0.05)"
             c_border = "#2F3549" if is_pure else "rgba(255, 255, 255, 0.08)"
             h_border = "#2F3549" if is_pure else "rgba(255, 255, 255, 0.1)"
-            h_top_border = "none" if is_pure else "1.5px solid rgba(255, 255, 255, 0.2)"
+            h_top_border = "none" if is_pure else "1px solid rgba(255, 255, 255, 0.2)"
 
             colors = {
                 "text_primary": p.get("on_background", "#ffffff"),
                 "text_secondary": p.get("on_surface_variant", "#a9b1d6"),
                 "accent_color": p.get("primary", "#2f64ff"),
+                "error_color": p.get("error", "#ff5555"),
                 "card_bg": c_bg,
                 "card_border": c_border,
                 "header_border": h_border,
@@ -355,12 +357,13 @@ class SettingsDialog(QDialog):
             c_bg = "#FFFFFF" if is_pure else "rgba(255, 255, 255, 0.6)"
             c_border = "#D1D8E0" if is_pure else "rgba(0, 0, 0, 0.08)"
             h_border = "#D1D8E0" if is_pure else "rgba(0, 0, 0, 0.1)"
-            h_top_border = "none" if is_pure else "1.5px solid rgba(255, 255, 255, 0.6)"
+            h_top_border = "none" if is_pure else "2px solid rgba(255, 255, 255, 0.6)"
 
             colors = {
                 "text_primary": p.get("on_background", "#1a1c23"),
                 "text_secondary": p.get("on_surface_variant", "#4a4f68"),
                 "accent_color": p.get("primary", "#2f64ff"),
+                "error_color": p.get("error", "#cc0000"),
                 "card_bg": c_bg,
                 "card_border": c_border,
                 "header_border": h_border,
@@ -545,7 +548,7 @@ class SettingsDialog(QDialog):
         grid.addWidget(self.profile_combo, 2, 1)
 
         grid.setRowStretch(4, 1)
-        self._main_layout.addWidget(main_card)
+        self.content_layout.addWidget(main_card)
 
     def _build_bottom_section(self):
         bottom_layout = QHBoxLayout()
