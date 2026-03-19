@@ -130,6 +130,8 @@ class BeautyEngineTray(QObject):
             palette = self.generator.generate_material_you_palette(
                 wallpaper_path, is_dark=is_dark, style=style, contrast_level=contrast_level
             )
+            self.current_palette = palette
+            self.config.set("cached_palette", palette)
             logger.info(
                 f"Generated {'Dark' if is_dark else 'Light'} {style} Palette: {palette}"
             )
@@ -187,8 +189,18 @@ class BeautyEngineTray(QObject):
         if self.settings_dialog is None:
             self.settings_dialog = SettingsDialog(self.config)
             self.settings_dialog.settings_saved.connect(self.refresh_theme)
+            
+            def on_theme_refreshed():
+                if hasattr(self, "current_palette"):
+                    self.settings_dialog.current_palette = self.current_palette
+                    self.settings_dialog.update_stylesheet()
+            
             # Connect to background refresh signal to update UI colors automatically
-            self.theme_refreshed.connect(self.settings_dialog.update_stylesheet)
+            self.theme_refreshed.connect(on_theme_refreshed)
+
+        if hasattr(self, "current_palette"):
+            self.settings_dialog.current_palette = self.current_palette
+            self.settings_dialog.update_stylesheet()
 
         # Bring to front
         self.settings_dialog.show()

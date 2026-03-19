@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Dynamic Light Theme variant for Settings UI with real-time QSS interpolation
+- Premium UI enhancements: QToolTip styling, QComboBox delegates, and capsule borders
+- Persisted `cached_palette` state in config for zero-delay UI rendering on launch
+- Refined SettingsDialog layout with custom About section and GitHub button
 - Premium Glassmorphism with animated frost overlay and adaptive blur per style
 - Auto (Smart) theme style selection based on wallpaper HCT tone/chroma
 - SDDM Login Screen integration with zero-sudo daily synchronization
