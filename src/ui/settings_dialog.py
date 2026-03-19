@@ -81,21 +81,21 @@ class SettingsHeader(QFrame):
         self.drag_pos = None
         self.setObjectName("AppHeader")
         self.setFixedHeight(45)
-        
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(16, 0, 16, 0)
-        
+
         icon_lbl = QLabel()
         icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png")
         if os.path.exists(icon_path):
             icon_lbl.setPixmap(QPixmap(icon_path).scaled(18, 18, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         icon_lbl.setObjectName("AppIcon")
         layout.addWidget(icon_lbl)
-        
+
         title_lbl = QLabel("Beauty Engine Settings")
         title_lbl.setObjectName("AppTitle")
         layout.addWidget(title_lbl)
-        
+
         layout.addStretch()
 
         close_btn = CloseButton(self)
@@ -529,7 +529,7 @@ class SettingsDialog(QDialog):
 
         self.content_layout.addStretch()
         self._build_actions()
-        
+
         self._main_layout.addWidget(self.content_widget)
         self._apply_popup_transparency()
 
