@@ -14,8 +14,8 @@ class TestSmartContrastPairs(unittest.TestCase):
         self.generator = ThemeGenerator()
         # Use a high contrast testing scenario that naturally breaks Material You's tonal assumptions
         # E.g. Soft Muted puts everything close to 50-60 tone, destroying contrast between pairs
-        self.test_image = (
-            "/usr/share/wallpapers/cachyos-wallpapers/wallhaven-yqe81l.png"
+        self.test_image = os.path.join(
+            os.path.dirname(__file__), "assets", "test_wallpaper.jpg"
         )
 
     def _get_delta_t(self, hex1, hex2):

@@ -84,7 +84,7 @@ Ensure you have Python 3.12+ and the base KDE dependencies installed (`plasma-wo
 Clone the repository and set up your virtual environment:
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/adaptive-cachy-beauty.git
+git clone https://github.com/dimarch0x/adaptive-cachy-beauty.git
 cd adaptive-cachy-beauty
 
 # Create and activate your virtual environment
