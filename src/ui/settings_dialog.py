@@ -18,10 +18,61 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate,
 )
 from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve, QUrl, QPoint
-from PySide6.QtGui import QIcon, QPainter, QColor, QPixmap, QDesktopServices
+from PySide6.QtGui import QIcon, QPainter, QColor, QPixmap, QDesktopServices, QPen, QPainterPath
 
 from config_manager import ConfigManager
 from logger import logger
+
+
+class CloseButton(QPushButton):
+    """Custom painted close button — theme-aware SVG visible on any background."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(28, 28)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setObjectName("AppCloseBtn")
+        self._hovered = False
+        self._color = QColor(255, 255, 255)
+
+    def set_color(self, color_str):
+        self._color = QColor(color_str)
+        self.update()
+
+    def enterEvent(self, event):
+        self._hovered = True
+        self.update()
+
+    def leaveEvent(self, event):
+        self._hovered = False
+        self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+
+        side = min(self.width(), self.height())
+        cx, cy = self.width() / 2, self.height() / 2
+
+        # Hover: draw red background circle centered
+        if self._hovered:
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(220, 60, 60, 150))
+            r_circle = (side - 2) / 2
+            p.drawEllipse(QPoint(cx, cy), r_circle, r_circle)
+
+        # Draw X lines perfectly centered
+        margin = 10
+        half_cross = (side - margin * 2) / 2
+
+        pen = QPen(self._color, 2.2, Qt.SolidLine, Qt.RoundCap)
+        p.setPen(pen)
+
+        # Line 1: Top-Left to Bottom-Right
+        p.drawLine(cx - half_cross, cy - half_cross, cx + half_cross, cy + half_cross)
+        # Line 2: Top-Right to Bottom-Left
+        p.drawLine(cx + half_cross, cy - half_cross, cx - half_cross, cy + half_cross)
+        p.end()
+
 
 class SettingsHeader(QFrame):
     """Custom draggable Header Bar (CSD)."""
@@ -30,27 +81,24 @@ class SettingsHeader(QFrame):
         self.drag_pos = None
         self.setObjectName("AppHeader")
         self.setFixedHeight(45)
-        
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(16, 0, 16, 0)
-        
+
         icon_lbl = QLabel()
         icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png")
         if os.path.exists(icon_path):
             icon_lbl.setPixmap(QPixmap(icon_path).scaled(18, 18, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         icon_lbl.setObjectName("AppIcon")
         layout.addWidget(icon_lbl)
-        
+
         title_lbl = QLabel("Beauty Engine Settings")
         title_lbl.setObjectName("AppTitle")
         layout.addWidget(title_lbl)
-        
+
         layout.addStretch()
-        
-        close_btn = QPushButton("✕")
-        close_btn.setObjectName("AppCloseBtn")
-        close_btn.setFixedSize(26, 26)
-        close_btn.setCursor(Qt.PointingHandCursor)
+
+        close_btn = CloseButton(self)
         close_btn.clicked.connect(self.window().close)
         layout.addWidget(close_btn)
 
@@ -161,7 +209,7 @@ class SettingsDialog(QDialog):
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
 
-        self.setFixedSize(640, 740)
+        self.setFixedSize(640, 695)
         self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint)
         # Always keep translucent — we control opacity via paintEvent
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -252,6 +300,11 @@ class SettingsDialog(QDialog):
 
         # 2) Draw frost noise overlay (tiled) with current opacity
         if self._frost_opacity > 0.01 and not self._frost_pixmap.isNull():
+            # Clip the noise so it doesn't bleed out of the 24px rounded corners!
+            path = QPainterPath()
+            path.addRoundedRect(self.rect(), 24, 24)
+            painter.setClipPath(path)
+
             painter.setOpacity(self._frost_opacity)
             pw, ph = self._frost_pixmap.width(), self._frost_pixmap.height()
             for x in range(0, self.width(), pw):
@@ -424,7 +477,7 @@ class SettingsDialog(QDialog):
                 if card_shadow:
                     card_shadow.setEnabled(not is_pure)
 
-            # App Icon Neon Glow
+            # App Icon Neon Glow and Close Button Color
             if hasattr(self, "header_bar"):
                 icon_lbl = self.header_bar.findChild(QLabel, "AppIcon")
                 if icon_lbl:
@@ -438,7 +491,11 @@ class SettingsDialog(QDialog):
                         icon_lbl.setGraphicsEffect(glow)
                     else:
                         icon_lbl.setGraphicsEffect(None)
-            
+
+                close_btn = self.header_bar.findChild(CloseButton, "AppCloseBtn")
+                if close_btn:
+                    close_btn.set_color(colors.get("text_primary", "#ffffff"))
+
             # Sub-widget Accent Color Injection
             for toggle_attr in ["kvantum_check", "konsole_check", "sddm_check"]:
                 toggle = getattr(self, toggle_attr, None)
@@ -472,7 +529,7 @@ class SettingsDialog(QDialog):
 
         self.content_layout.addStretch()
         self._build_actions()
-        
+
         self._main_layout.addWidget(self.content_widget)
         self._apply_popup_transparency()
 
