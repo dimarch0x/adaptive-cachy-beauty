@@ -1,7 +1,6 @@
 import sys
 import os
 import pytest
-from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 
 # Ensure src is in path so we can import internal modules

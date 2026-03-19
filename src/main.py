@@ -38,7 +38,7 @@ class BeautyEngineTray(QObject):
         self.icon_path = os.path.join(os.path.dirname(__file__), "..", "resources", "icons", "icon.png")
         self.tray = QSystemTrayIcon()
         self.tray.setToolTip("Adaptive Cachy Beauty")
-        
+
         if os.path.exists(self.icon_path):
              self.tray.setIcon(QIcon(self.icon_path))
         else:
@@ -100,7 +100,7 @@ class BeautyEngineTray(QObject):
     @Slot()
     def on_wallpaper_changed(self):
         logger.debug(
-            f"DBus signal received: wallpaperChanged. Starting debounce timer."
+            "DBus signal received: wallpaperChanged. Starting debounce timer."
         )
         self.refresh_timer.start()
 

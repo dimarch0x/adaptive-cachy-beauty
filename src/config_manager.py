@@ -11,7 +11,9 @@ class ConfigManager:
             "dark_mode": True,
             "enable_kvantum": True,
             "enable_konsole": True,
-            "contrast_level": "normal",
+            "enable_terminals": True,
+            "contrast_level": "standard",
+            "theme_style": "Neon Glass",
         }
         self.load_config()
 

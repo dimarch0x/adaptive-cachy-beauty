@@ -32,8 +32,6 @@ class KvantumGenerator:
             kv_source = os.path.join(
                 self.base_theme_dir, f"{self.base_theme_name}.kvconfig"
             )
-            with open(kv_source, "r", encoding="utf-8") as f:
-                kvconfig_content = f.read()
 
             # 3. Modify colors
             # We need to replace the [GeneralColors] section or append to it if we want to override.

@@ -27,9 +27,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-qt pytest-mock
+        pip install ruff pytest pytest-qt pytest-mock pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Run pytest with xvfb for UI
+    - name: Lint with ruff
+      run: |
+        ruff check src/ tests/ --select E,F,W --ignore E501,E402
+    - name: Run tests with coverage
       run: |
         export PYTHONPATH=src
-        xvfb-run --auto-servernum pytest tests/
+        xvfb-run --auto-servernum pytest tests/ --cov=src --cov-report=term-missing --cov-report=xml

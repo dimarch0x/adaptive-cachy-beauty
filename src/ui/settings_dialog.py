@@ -12,13 +12,12 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFrame,
-    QWidget,
     QGraphicsDropShadowEffect,
     QGridLayout,
     QSizePolicy,
 )
 from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve
-from PySide6.QtGui import QFont, QIcon, QPainter, QColor, QPixmap
+from PySide6.QtGui import QIcon, QPainter, QColor, QPixmap
 
 from config_manager import ConfigManager
 from logger import logger
@@ -254,15 +253,15 @@ class SettingsDialog(QDialog):
     def _build_header(self):
         header_layout = QVBoxLayout()
         header_layout.setSpacing(0)
-        
+
         title = QLabel("Preferences")
         title.setObjectName("Title")
         header_layout.addWidget(title)
-        
+
         subtitle = QLabel("Configure your Adaptive Cachy Beauty Core")
         subtitle.setObjectName("Subtitle")
         header_layout.addWidget(subtitle)
-        
+
         self._main_layout.addLayout(header_layout)
 
     def _build_main_card(self):

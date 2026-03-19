@@ -245,12 +245,12 @@ class ThemeGenerator:
                 dominant_argb = max(quantization_result.items(), key=lambda item: item[1])[0]
             else:
                 dominant_argb = 0xFF888888  # Safe neutral gray
-            
+
             # Force exactly 0 chroma to keep the outcome cleanly gray (prevents "muddy" tints)
             hct = Hct.from_int(dominant_argb)
             hct.chroma = 0.0
             dominant_argb = hct.to_int()
-            
+
             # Critical: SchemeVibrant (Neon Glass) forces chroma to 48 even if input is 0.
             # For a truly grayscale image, we MUST enforce SchemeMonochrome to prevent hue hallucination.
             style = "soft muted"
@@ -307,7 +307,7 @@ class ThemeGenerator:
             pc_hct = Hct.from_int(pc_argb)
             pc_hct.tone = 10.0  # Force very dark background for titlebars
             pc_argb = pc_hct.to_int()
-            
+
             opc_hct = Hct.from_int(opc_argb)
             opc_hct.tone = 90.0  # Force very light/neon text
             opc_argb = opc_hct.to_int()

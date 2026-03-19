@@ -60,6 +60,7 @@ class PlasmaThemeManager:
             "BackgroundAlternate": surface_variant,
             "ForegroundNormal": fg,
             "ForegroundInactive": fg_inactive,
+            "ForegroundNegative": error,
             "DecorationFocus": primary,
             "DecorationHover": primary,
         }
@@ -70,6 +71,7 @@ class PlasmaThemeManager:
             "BackgroundAlternate": surface_variant,
             "ForegroundNormal": fg,
             "ForegroundInactive": fg_inactive,
+            "ForegroundNegative": error,
             "DecorationFocus": primary,
             "DecorationHover": primary,
         }
