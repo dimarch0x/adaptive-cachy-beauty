@@ -781,7 +781,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(separator)
 
         about_row = QHBoxLayout()
-        version_lbl = QLabel("v1.0 · Adaptive Cachy Beauty")
+        version_lbl = QLabel("v1.0.1-beta · Adaptive Cachy Beauty")
         version_lbl.setStyleSheet("color: #888888; font-size: 11px; font-weight: 500;")
         about_row.addWidget(version_lbl)
         about_row.addStretch()
