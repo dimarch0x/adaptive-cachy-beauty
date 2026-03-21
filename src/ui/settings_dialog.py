@@ -1,5 +1,4 @@
 import os
-import math
 import platform
 import subprocess
 from string import Template
@@ -324,8 +323,6 @@ class SettingsDialog(QDialog):
         try:
             wid = str(int(self.winId()))
             if enabled:
-                import math
-
                 # Aesthetic trade-off: to completely avoid the X11 Plasma Kornerbug,
                 # we use a strict rectangular (0px radius) shape when glass blur is active.
                 # A sharp floating glass pane natively matches its X11 region.
