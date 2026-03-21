@@ -1,4 +1,5 @@
 import os
+import math
 import platform
 import subprocess
 from string import Template
@@ -17,8 +18,24 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStyledItemDelegate,
 )
-from PySide6.QtCore import Qt, Signal, Property, QPropertyAnimation, QEasingCurve, QUrl, QPoint
-from PySide6.QtGui import QIcon, QPainter, QColor, QPixmap, QDesktopServices, QPen, QPainterPath
+from PySide6.QtCore import (
+    Qt,
+    Signal,
+    Property,
+    QPropertyAnimation,
+    QEasingCurve,
+    QUrl,
+    QPoint,
+)
+from PySide6.QtGui import (
+    QIcon,
+    QPainter,
+    QColor,
+    QPixmap,
+    QDesktopServices,
+    QPen,
+    QPainterPath,
+)
 
 from config_manager import ConfigManager
 from logger import logger
@@ -26,6 +43,7 @@ from logger import logger
 
 class CloseButton(QPushButton):
     """Custom painted close button — theme-aware SVG visible on any background."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(28, 28)
@@ -76,6 +94,7 @@ class CloseButton(QPushButton):
 
 class SettingsHeader(QFrame):
     """Custom draggable Header Bar (CSD)."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.drag_pos = None
@@ -86,9 +105,15 @@ class SettingsHeader(QFrame):
         layout.setContentsMargins(16, 0, 16, 0)
 
         icon_lbl = QLabel()
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png")
+        icon_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png"
+        )
         if os.path.exists(icon_path):
-            icon_lbl.setPixmap(QPixmap(icon_path).scaled(18, 18, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            icon_lbl.setPixmap(
+                QPixmap(icon_path).scaled(
+                    18, 18, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+            )
         icon_lbl.setObjectName("AppIcon")
         layout.addWidget(icon_lbl)
 
@@ -114,8 +139,10 @@ class SettingsHeader(QFrame):
             self.drag_pos = event.globalPosition().toPoint()
             event.accept()
 
+
 class AnimatedToggle(QCheckBox):
     """Custom iOS/Android style animated toggle switch."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(48, 24)
@@ -154,13 +181,25 @@ class AnimatedToggle(QCheckBox):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
 
-        off_bg = QColor(120, 120, 120, 100) # Muted OFF grey
+        off_bg = QColor(120, 120, 120, 100)  # Muted OFF grey
 
         # Lerp color from off_bg to _accent_color
-        r = off_bg.red() + (self._accent_color.red() - off_bg.red()) * self._thumb_position
-        g = off_bg.green() + (self._accent_color.green() - off_bg.green()) * self._thumb_position
-        b = off_bg.blue() + (self._accent_color.blue() - off_bg.blue()) * self._thumb_position
-        a = off_bg.alpha() + (self._accent_color.alpha() - off_bg.alpha()) * self._thumb_position
+        r = (
+            off_bg.red()
+            + (self._accent_color.red() - off_bg.red()) * self._thumb_position
+        )
+        g = (
+            off_bg.green()
+            + (self._accent_color.green() - off_bg.green()) * self._thumb_position
+        )
+        b = (
+            off_bg.blue()
+            + (self._accent_color.blue() - off_bg.blue()) * self._thumb_position
+        )
+        a = (
+            off_bg.alpha()
+            + (self._accent_color.alpha() - off_bg.alpha()) * self._thumb_position
+        )
 
         current_bg = QColor(int(r), int(g), int(b), int(a))
 
@@ -186,14 +225,15 @@ class AnimatedToggle(QCheckBox):
             self._thumb_position = 1.0
         self.update()
 
+
 class SettingsDialog(QDialog):
     settings_saved = Signal()  # Signal emitted when settings are saved
 
     # --- Glass configuration per style ---
     _GLASS_PROFILES = {
-        "Neon Glass":     {"alpha": 191, "frost_opacity": 0.06, "blur": True},
-        "Frosted Glass":  {"alpha": 153, "frost_opacity": 0.12, "blur": True},
-        "Material Pure":  {"alpha": 255, "frost_opacity": 0.0,  "blur": False},
+        "Neon Glass": {"alpha": 191, "frost_opacity": 0.06, "blur": True},
+        "Frosted Glass": {"alpha": 153, "frost_opacity": 0.12, "blur": True},
+        "Material Pure": {"alpha": 255, "frost_opacity": 0.0, "blur": False},
     }
     _BASE_RGB = (15, 17, 26)  # Dark background base
 
@@ -205,14 +245,19 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Beauty Engine Settings")
 
         # Load custom app icon
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png")
+        icon_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "resources", "icons", "icon.png"
+        )
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
 
         self.setFixedSize(640, 695)
-        self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint)
+        self.setWindowFlags(
+            Qt.Dialog | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint
+        )
         # Always keep translucent — we control opacity via paintEvent
         self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self._window_radius = 16  # Dynamic radius depending on style
 
         # Animated opacity property (0–255)
         self._bg_alpha = 255
@@ -259,7 +304,12 @@ class SettingsDialog(QDialog):
     def _load_frost_texture(self) -> QPixmap:
         """Load the tileable frost noise texture."""
         tex_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "resources", "textures", "frost_noise.png"
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "resources",
+            "textures",
+            "frost_noise.png",
         )
         if os.path.exists(tex_path):
             return QPixmap(tex_path)
@@ -274,9 +324,23 @@ class SettingsDialog(QDialog):
         try:
             wid = str(int(self.winId()))
             if enabled:
+                import math
+
+                # Aesthetic trade-off: to completely avoid the X11 Plasma Kornerbug,
+                # we use a strict rectangular (0px radius) shape when glass blur is active.
+                # A sharp floating glass pane natively matches its X11 region.
                 subprocess.run(
-                    ["xprop", "-f", "_KDE_NET_WM_BLUR_BEHIND_REGION", "32c",
-                     "-set", "_KDE_NET_WM_BLUR_BEHIND_REGION", "0", "-id", wid],
+                    [
+                        "xprop",
+                        "-f",
+                        "_KDE_NET_WM_BLUR_BEHIND_REGION",
+                        "32c",
+                        "-set",
+                        "_KDE_NET_WM_BLUR_BEHIND_REGION",
+                        "0",
+                        "-id",
+                        wid,
+                    ],
                     capture_output=True,
                 )
             else:
@@ -296,13 +360,15 @@ class SettingsDialog(QDialog):
         # 1) Draw rounded semi-transparent background
         painter.setBrush(self._bg_color)
         painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(self.rect(), 24, 24)
+        # Use dynamic radius: 0 for glass, 16 for pure material
+        r = getattr(self, "_window_radius", 0)
+        painter.drawRoundedRect(self.rect(), r, r)
 
         # 2) Draw frost noise overlay (tiled) with current opacity
         if self._frost_opacity > 0.01 and not self._frost_pixmap.isNull():
-            # Clip the noise so it doesn't bleed out of the 24px rounded corners!
+            # Clip the noise so it doesn't bleed out of the rounded corners!
             path = QPainterPath()
-            path.addRoundedRect(self.rect(), 24, 24)
+            path.addRoundedRect(self.rect(), r, r)
             painter.setClipPath(path)
 
             painter.setOpacity(self._frost_opacity)
@@ -321,7 +387,16 @@ class SettingsDialog(QDialog):
         self.update_stylesheet()
 
     def update_stylesheet(self):
-        chevron_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", "chevron-down.svg"))
+        chevron_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "resources",
+                "icons",
+                "chevron-down.svg",
+            )
+        )
         chevron_path = chevron_path.replace("\\", "/")
 
         try:
@@ -330,7 +405,9 @@ class SettingsDialog(QDialog):
             current_style = ""
 
         # Resolve glass profile for this style
-        profile = self._GLASS_PROFILES.get(current_style, self._GLASS_PROFILES["Material Pure"])
+        profile = self._GLASS_PROFILES.get(
+            current_style, self._GLASS_PROFILES["Material Pure"]
+        )
         target_alpha = profile["alpha"]
         target_frost = profile["frost_opacity"]
 
@@ -339,6 +416,9 @@ class SettingsDialog(QDialog):
         self._alpha_anim.setStartValue(self._bg_alpha)
         self._alpha_anim.setEndValue(target_alpha)
         self._alpha_anim.start()
+
+        # Toggle dynamic radius
+        self._window_radius = 0 if profile["blur"] else 16
 
         # Animate frost overlay opacity
         self._frost_anim.stop()
@@ -405,6 +485,7 @@ class SettingsDialog(QDialog):
                 "separator_bg": "rgba(255, 255, 255, 0.07)",
                 "swatch_border": "rgba(255, 255, 255, 0.2)",
                 "chevron_path": chevron_path,
+                "window_radius": f"{self._window_radius}px",
             }
         else:
             c_bg = "#FFFFFF" if is_pure else "rgba(255, 255, 255, 0.6)"
@@ -446,10 +527,20 @@ class SettingsDialog(QDialog):
                 "separator_bg": "rgba(0, 0, 0, 0.06)",
                 "swatch_border": "rgba(0, 0, 0, 0.15)",
                 "chevron_path": chevron_path,
+                "window_radius": f"{self._window_radius}px",
             }
 
         # Load extracted QSS templates
-        qss_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources", "styles", "settings_dialog.qss"))
+        qss_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "resources",
+                "styles",
+                "settings_dialog.qss",
+            )
+        )
         if os.path.exists(qss_path):
             with open(qss_path, "r", encoding="utf-8") as f:
                 stylesheet = f.read()
@@ -457,9 +548,13 @@ class SettingsDialog(QDialog):
 
             # Update Preview Swatches
             if hasattr(self, "primary_swatch") and "accent_color" in colors:
-                self.primary_swatch.setStyleSheet(f"#Swatch0 {{ background-color: {colors['accent_color']}; border-radius: 12px; border: 2px solid {colors['swatch_border']}; }}")
+                self.primary_swatch.setStyleSheet(
+                    f"#Swatch0 {{ background-color: {colors['accent_color']}; border-radius: 12px; border: 2px solid {colors['swatch_border']}; }}"
+                )
             if hasattr(self, "bg_swatch") and "text_primary" in colors:
-                self.bg_swatch.setStyleSheet(f"#Swatch1 {{ background-color: {colors.get('menu_bg', '#121212')}; border-radius: 12px; border: 2px solid {colors['accent_color']}; }}")
+                self.bg_swatch.setStyleSheet(
+                    f"#Swatch1 {{ background-color: {colors.get('menu_bg', '#121212')}; border-radius: 12px; border: 2px solid {colors['accent_color']}; }}"
+                )
 
             # Update Mockup and Glow
             if hasattr(self, "save_glow") and "accent_color" in colors:
@@ -472,7 +567,11 @@ class SettingsDialog(QDialog):
                 pass
 
             # Toggle card shadows
-            for shadow_attr in ["main_card_shadow", "features_card_shadow", "preview_card_shadow"]:
+            for shadow_attr in [
+                "main_card_shadow",
+                "features_card_shadow",
+                "preview_card_shadow",
+            ]:
                 card_shadow = getattr(self, shadow_attr, None)
                 if card_shadow:
                     card_shadow.setEnabled(not is_pure)
@@ -502,7 +601,9 @@ class SettingsDialog(QDialog):
                 if hasattr(toggle, "update_accent"):
                     toggle.update_accent(colors.get("accent_color", "#74B816"))
         else:
-            logger.warning(f"Extracted QSS not found at {qss_path}. Reverting to no style.")
+            logger.warning(
+                f"Extracted QSS not found at {qss_path}. Reverting to no style."
+            )
 
     def _on_profile_changed(self, text):
         self.update_stylesheet()
@@ -625,7 +726,9 @@ class SettingsDialog(QDialog):
 
         label = QLabel("FEATURES")
         label.setObjectName("Subtitle")
-        label.setStyleSheet("margin-bottom: 10px; font-weight: 800; letter-spacing: 1px;")
+        label.setStyleSheet(
+            "margin-bottom: 10px; font-weight: 800; letter-spacing: 1px;"
+        )
         layout.addWidget(label)
 
         def add_feature(icon_name, text, attr_name):
@@ -633,7 +736,9 @@ class SettingsDialog(QDialog):
             row.setContentsMargins(0, 0, 0, 0)
 
             icon_lbl = QLabel()
-            icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "icons", icon_name)
+            icon_path = os.path.join(
+                os.path.dirname(__file__), "..", "..", "resources", "icons", icon_name
+            )
             if os.path.exists(icon_path):
                 # Tint the icon to white for premium look
                 pix = QIcon(icon_path).pixmap(24, 24)
@@ -643,7 +748,9 @@ class SettingsDialog(QDialog):
                 painter.setCompositionMode(QPainter.CompositionMode_SourceOver)
                 painter.drawPixmap(0, 0, pix)
                 painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
-                painter.fillRect(tinted.rect(), QColor(255, 255, 255, 200)) # Muted white
+                painter.fillRect(
+                    tinted.rect(), QColor(255, 255, 255, 200)
+                )  # Muted white
                 painter.end()
                 icon_lbl.setPixmap(tinted)
             row.addWidget(icon_lbl)
@@ -671,7 +778,9 @@ class SettingsDialog(QDialog):
         # About / Repo section at the bottom
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
-        separator.setStyleSheet("background: rgba(255,255,255,0.07); max-height: 1px; margin: 4px 0px;")
+        separator.setStyleSheet(
+            "background: rgba(255,255,255,0.07); max-height: 1px; margin: 4px 0px;"
+        )
         layout.addWidget(separator)
 
         about_row = QHBoxLayout()
@@ -710,7 +819,9 @@ class SettingsDialog(QDialog):
 
         label = QLabel("Theme Preview")
         label.setObjectName("Subtitle")
-        label.setStyleSheet("margin-bottom: 20px; font-weight: 800; letter-spacing: 0.5px;")
+        label.setStyleSheet(
+            "margin-bottom: 20px; font-weight: 800; letter-spacing: 0.5px;"
+        )
         layout.addWidget(label)
 
         # Swatches Row
@@ -740,7 +851,14 @@ class SettingsDialog(QDialog):
         mockup_layout.setContentsMargins(0, 10, 0, 0)
 
         self.mockup_preview = QLabel()
-        img_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "textures", "ui_preview.png")
+        img_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "resources",
+            "textures",
+            "ui_preview.png",
+        )
         if os.path.exists(img_path):
             pix = QPixmap(img_path).scaledToWidth(145, Qt.SmoothTransformation)
             self.mockup_preview.setPixmap(pix)
@@ -776,9 +894,9 @@ class SettingsDialog(QDialog):
         save_glow = QGraphicsDropShadowEffect(self)
         save_glow.setBlurRadius(25)
         save_glow.setOffset(0, 0)
-        save_glow.setColor(QColor(109, 178, 255, 180)) # Default glow
+        save_glow.setColor(QColor(109, 178, 255, 180))  # Default glow
         self.save_btn.setGraphicsEffect(save_glow)
-        self.save_glow = save_glow # Store reference to update color later
+        self.save_glow = save_glow  # Store reference to update color later
 
         btn_layout.addWidget(self.cancel_btn)
         btn_layout.addWidget(self.save_btn)
@@ -789,10 +907,14 @@ class SettingsDialog(QDialog):
             combo.setItemDelegate(QStyledItemDelegate(combo))
             container = combo.view().parentWidget()
             if container:
-                container.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
+                container.setWindowFlags(
+                    Qt.Popup | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint
+                )
                 container.setAttribute(Qt.WA_TranslucentBackground)
                 container.setObjectName("ComboContainer")
-                container.setStyleSheet("#ComboContainer { background: transparent; border: none; }")
+                container.setStyleSheet(
+                    "#ComboContainer { background: transparent; border: none; }"
+                )
 
         # Initial stylesheet application
         self.update_stylesheet()

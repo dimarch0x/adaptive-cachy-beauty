@@ -21,8 +21,8 @@ QFrame#AppHeader {
     background: transparent;
     border-bottom: 1px solid $header_border;
     border-top: $header_top_border;
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
+    border-top-left-radius: $window_radius;
+    border-top-right-radius: $window_radius;
 }
 QLabel#AppTitle {
     font-size: 13px;
