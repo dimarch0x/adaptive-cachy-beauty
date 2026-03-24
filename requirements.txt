@@ -3,7 +3,7 @@ charset-normalizer==3.4.4
 colorthief==0.2.1
 dbus-python==1.4.0
 idna==3.11
-kde-material-you-colors==2.0.0
+kde-material-you-colors==2.1.0
 materialyoucolor==3.0.2
 numpy==2.4.2
 pillow==12.1.1
